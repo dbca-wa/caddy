@@ -1,0 +1,9 @@
+venv/
+media/
+staticfiles/
+logs/
+.env
+.coverage
+*.pyc
+*.sw[o-p]
+*.sqlite3
