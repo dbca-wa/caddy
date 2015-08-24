@@ -3,8 +3,11 @@ from django.core.paginator import Paginator, InvalidPage
 from django.http import Http404
 from shack.models import Address
 from tastypie.api import Api
+from tastypie.authentication import Authentication
+from tastypie.authorization import Authorization
 from tastypie.cache import SimpleCache
 from tastypie.resources import ModelResource, ALL
+from tastypie.throttle import CacheThrottle
 from tastypie.utils import trailing_slash
 
 v1_api = Api(api_name='v1')
@@ -13,7 +16,9 @@ v1_api = Api(api_name='v1')
 class AddressResource(ModelResource):
     class Meta:
         queryset = Address.objects.all()
-        list_allowed_methods = ['get']
+        authentication = Authentication()  # No-op authentication.
+        authorization = Authorization()  # No-op authorization.
+        list_allowed_methods = ['get']   # Read-only API.
         detail_allowed_methods = ['get']
         excludes = ['cadastre_id', 'search_index', 'address_text']
         filtering = {
@@ -23,6 +28,7 @@ class AddressResource(ModelResource):
             'centroid': ALL,
         }
         cache = SimpleCache()
+        throttle = CacheThrottle(throttle_at=60, timeframe=60)
 
     def prepend_urls(self):
         return [
@@ -38,11 +44,11 @@ class AddressResource(ModelResource):
         Accepts a query parameter ``q`` containing urlencoded text.
         """
         self.method_check(request, allowed=['get'])
-        self.is_authenticated(request)
         self.throttle_check(request)
         # Do the search query.
         q = request.GET.get('q', '')
         qs = Address.objects.search(q)
+        # TODO: refactor to use the tastypie Paginator class instead.
         paginator = Paginator(qs, 20)
 
         try:
