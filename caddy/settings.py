@@ -28,11 +28,13 @@ INSTALLED_APPS = (
     'django_extensions',
     'tastypie',
     'django_wsgiserver',
+    'corsheaders',
     'shack',
 )
 
 MIDDLEWARE_CLASSES = (
     'django.contrib.sessions.middleware.SessionMiddleware',
+    'corsheaders.middleware.CorsMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
@@ -114,3 +116,7 @@ LOGGING = {
         },
     }
 }
+
+# django-cors-headers settings
+CORS_ORIGIN_ALLOW_ALL = True
+CORS_ALLOW_METHODS = ('GET',)
