@@ -16,9 +16,11 @@ class Command(BaseCommand):
                 limit = int(options['limit'])
             except ValueError:
                 raise CommandError('Invalid limit value: {}'.format(options['limit']))
+        else:
+            limit = None
 
-            self.stdout.write('Harvesting cadastre addresses.')
-            harvest_cadastre(limit)
-            self.stdout.write('Finished harvest of cadastre addresses.')
+        self.stdout.write('Harvesting cadastre addresses.')
+        harvest_cadastre(limit)
+        self.stdout.write('Finished harvest of cadastre addresses.')
 
-            return
+        return

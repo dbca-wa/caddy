@@ -9,6 +9,7 @@ class Address(models.Model):
     address_text = models.TextField()
     address_nice = models.TextField(null=True, blank=True)
     centroid = models.PointField(srid=4326)
+    envelope = models.PolygonField(srid=4326, null=True, blank=True)
     search_index = VectorField()
 
     objects = SearchManager(

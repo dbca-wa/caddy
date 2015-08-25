@@ -7,6 +7,7 @@ from tastypie.authentication import Authentication
 from tastypie.authorization import Authorization
 from tastypie.cache import SimpleCache
 from tastypie.resources import ModelResource, ALL
+from tastypie.serializers import Serializer
 from tastypie.throttle import CacheThrottle
 from tastypie.utils import trailing_slash
 
@@ -26,46 +27,56 @@ class AddressResource(ModelResource):
             'cadastre_id': ALL,
             'address': ALL,
             'centroid': ALL,
+            'envelope': ALL,
         }
         cache = SimpleCache()
+        serializer = Serializer(formats=['json', 'jsonp'])
         throttle = CacheThrottle(throttle_at=60, timeframe=60)
 
     def prepend_urls(self):
         return [
             url(
-                r'^(?P<resource_name>{})/search{}$'.format(
+                r'^(?P<resource_name>{})/geocode{}$'.format(
                     self._meta.resource_name, trailing_slash()),
-                self.wrap_view('address_search'), name='api_address_search'
+                self.wrap_view('geocode'), name='api_geocode'
             ),
         ]
 
-    def address_search(self, request, **kwargs):
+    def geocode(self, request, **kwargs):
         """Custom view to allow full text search of AddressResource.
         Accepts a query parameter ``q`` containing urlencoded text.
+        Returns a custom response (JSON).
         """
         self.method_check(request, allowed=['get'])
         self.throttle_check(request)
-        # Do the search query.
-        q = request.GET.get('q', '')
-        qs = Address.objects.search(q)
-        # TODO: refactor to use the tastypie Paginator class instead.
-        paginator = Paginator(qs, 20)
+        limit = request.GET.get('limit', '')
 
         try:
-            page = paginator.page(int(request.GET.get('page', 1)))
-        except InvalidPage:
-            raise Http404('No results.')
+            limit = int(limit)
+        except ValueError:
+            limit = None
+
+        q = request.GET.get('q', '')
+        qs = Address.objects.search(q)
+
+        if qs.count() == 0:
+            return '[]'
+
+        if limit and limit > 0:
+            qs = qs[0:limit]
 
         objects = []
 
-        for obj in page.object_list:
-            bundle = self.build_bundle(obj=obj, request=request)
-            bundle = self.full_dehydrate(bundle)
-            objects.append(bundle)
-
-        object_list = {'objects': objects}
+        for obj in qs:
+            objects.append({
+                'id': obj.id,
+                'address': obj.address_nice,
+                'lat': obj.centroid.y,
+                'lon': obj.centroid.x,
+                'bounds': list(obj.envelope.extent) if obj.envelope else []
+            })
 
         self.log_throttled_access(request)
-        return self.create_response(request, object_list)
+        return self.create_response(request, objects)
 
 v1_api.register(AddressResource())

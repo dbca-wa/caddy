@@ -90,7 +90,8 @@ def harvest_cadastre(limit=None):
                 add = Address(cadastre_id=f['id'])
                 update = False  # New feature
             poly = GEOSGeometry(json.dumps(f['geometry']))
-            add.centroid = poly.centroid
+            add.centroid = poly.centroid  # Precalculate the centroid.
+            add.envelope = poly.envelope  # Simplify the geometry bounds.
             # NOTE: not all fields might be present in the feature properties.
             prop = f['properties']
             # Strip out defined k, v pairs from the feature.

@@ -1,8 +1,8 @@
 # Caddy
 
 Caddy is a small experiment to harvest land parcel legal description
-fields, denormalise/sanitise data and expose it as a searchable API via
-a minimal Django application.
+fields, denormalise/sanitise data and expose it as a searchable API
+for geocoding via minimal Django application.
 
 # Installation
 
@@ -30,3 +30,15 @@ The following environment settings should be defined in a `.env` file
 
 *NOTE*: the `GEOSERVER_*` settings are to a WFS service endpoint. The
 `CADASTRE_LAYER` is the WFS workspace:layer.
+
+# Usage
+
+Run the application with `honcho start`. Visit the API url and provide a
+query parameter `q` to search, e.g.:
+
+    http://HOST/api/v1/address/geocode/?q=perth+wa&limit=5
+
+Other API endpoints:
+
+    http://HOST/api/v1/address/
+    http://HOST/api/v1/address/schema/

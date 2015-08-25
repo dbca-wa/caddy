@@ -86,7 +86,7 @@ STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 
 
 # Tastypie settings
-TASTYPIE_DEFAULT_FORMATS = ['json']
+TASTYPIE_DEFAULT_FORMATS = ['json', 'jsonp']
 
 
 # Logging settings
