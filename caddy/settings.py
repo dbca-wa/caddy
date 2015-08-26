@@ -12,6 +12,19 @@ PROJECT_DIR = os.path.join(BASE_DIR, 'caddy')
 
 SECRET_KEY = os.environ['SECRET_KEY']
 DEBUG = True if os.environ.get('DEBUG', False) else False
+INTERNAL_IPS = ['127.0.0.1', '::1']
+if not DEBUG:
+    # UAT and Production hosts
+    ALLOWED_HOSTS = [
+        'caddy.dpaw.wa.gov.au',
+        'caddy.dpaw.wa.gov.au.',
+        'caddy-training.dpaw.wa.gov.au',
+        'caddy-training.dpaw.wa.gov.au.',
+    ]
+    SECURE_CONTENT_TYPE_NOSNIFF = True
+    CSRF_COOKIE_SECURE = True
+    SESSION_COOKIE_SECURE = True
+    CSRF_COOKIE_HTTPONLY = True
 
 
 # Application definition
@@ -59,7 +72,6 @@ TEMPLATES = [
                 'django.contrib.messages.context_processors.messages',
             ],
         },
-        'TEMPLATE_DEBUG': DEBUG,
     },
 ]
 
