@@ -1,17 +1,20 @@
 from django.conf.urls import url
 from django.core.paginator import Paginator, InvalidPage
 from django.http import Http404
+import logging
 from shack.models import Address
 from tastypie.api import Api
 from tastypie.authentication import Authentication
 from tastypie.authorization import Authorization
 from tastypie.cache import SimpleCache
+from tastypie.http import HttpResponse
 from tastypie.resources import ModelResource, ALL
 from tastypie.serializers import Serializer
 from tastypie.throttle import CacheThrottle
 from tastypie.utils import trailing_slash
 
 v1_api = Api(api_name='v1')
+logger = logging.getLogger('caddy')
 
 
 class AddressResource(ModelResource):
@@ -57,26 +60,29 @@ class AddressResource(ModelResource):
             limit = None
 
         q = request.GET.get('q', '')
-        qs = Address.objects.search(q)
-
-        if qs.count() == 0:
-            return '[]'
-
+        logger.info('Geocode query start: {}'.format(q))
         if limit and limit > 0:
-            qs = qs[0:limit]
+            qs = Address.objects.search(q).values('id', 'address_nice', 'centroid', 'envelope')[:limit]
+        else:
+            qs = Address.objects.search(q).values('id', 'address_nice', 'centroid', 'envelope')
+
+        if not qs.exists():
+            logger.info('Returning empty geocode query response')
+            return HttpResponse('[]')
 
         objects = []
 
         for obj in qs:
             objects.append({
-                'id': obj.id,
-                'address': obj.address_nice,
-                'lat': obj.centroid.y,
-                'lon': obj.centroid.x,
-                'bounds': list(obj.envelope.extent) if obj.envelope else []
+                'id': obj['id'],
+                'address': obj['address_nice'],
+                'lat': obj['centroid'].y,
+                'lon': obj['centroid'].x,
+                'bounds': list(obj['envelope'].extent) if obj['envelope'] else []
             })
 
         self.log_throttled_access(request)
+        logger.info('Returning geocode query response')
         return self.create_response(request, objects)
 
 v1_api.register(AddressResource())
