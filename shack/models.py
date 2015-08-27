@@ -5,6 +5,8 @@ from djorm_pgfulltext.fields import VectorField
 
 
 class Address(models.Model):
+    """An address indexed and searchable via PostgreSQL.
+    """
     cadastre_id = models.CharField(max_length=64, unique=True, db_index=True)
     address_text = models.TextField()
     address_nice = models.TextField(null=True, blank=True)

@@ -1,0 +1,5 @@
+{{ object.address_nice }}
+Lot {{ object.lot_no }}, {{ object.address_no }}{{ object.address_sfx }} {{ object.road }} {{ object.road_sfx }} {{ object.locality }} {{ object.postcode }}
+{{ object.survey_lot }}
+{{ object.strata }}
+{{ object.reserve }}
