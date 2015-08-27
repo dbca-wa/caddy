@@ -18,8 +18,8 @@ if not DEBUG:
     ALLOWED_HOSTS = [
         'caddy.dpaw.wa.gov.au',
         'caddy.dpaw.wa.gov.au.',
-        'caddy-training.dpaw.wa.gov.au',
-        'caddy-training.dpaw.wa.gov.au.',
+        'caddy-uat.dpaw.wa.gov.au',
+        'caddy-uat.dpaw.wa.gov.au.',
     ]
     SECURE_CONTENT_TYPE_NOSNIFF = True
     CSRF_COOKIE_SECURE = True
