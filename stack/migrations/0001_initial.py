@@ -15,7 +15,7 @@ class Migration(migrations.Migration):
             name='Cadastre',
             fields=[
                 ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
-                ('object_id', models.IntegerField(unique=True, db_index=True)),
+                ('object_id', models.CharField(unique=True, max_length=64, db_index=True)),
                 ('address_nice', models.CharField(max_length=256)),
                 ('centroid', django.contrib.gis.db.models.fields.PointField(srid=4326)),
                 ('envelope', django.contrib.gis.db.models.fields.PolygonField(srid=4326)),

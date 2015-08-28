@@ -1,5 +1,5 @@
 {{ object.address_nice }}
-Lot {{ object.lot_no }}, {{ object.address_no }}{{ object.address_sfx }} {{ object.road }} {{ object.road_sfx }} {{ object.locality }} {{ object.postcode }}
-{{ object.survey_lot }}
-{{ object.strata }}
-{{ object.reserve }}
+Lot {{ object.lot_no|default_if_none:"" }}, {{ object.address_no|default_if_none:"" }}{{ object.address_sfx|default_if_none:"" }} {{ object.road|default_if_none:"" }} {{ object.road_sfx|default_if_none:"" }} {{ object.locality|default_if_none:"" }} {{ object.postcode|default_if_none:"" }}
+{{ object.survey_lot|default_if_none:"" }}
+{{ object.strata|default_if_none:"" }}
+{{ object.reserve|default_if_none:"" }}

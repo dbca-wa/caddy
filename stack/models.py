@@ -3,7 +3,7 @@ from django.utils.text import Truncator
 
 
 class Cadastre(models.Model):
-    object_id = models.IntegerField(unique=True, db_index=True)
+    object_id = models.CharField(max_length=64, unique=True, db_index=True)
     address_nice = models.CharField(max_length=256)
     centroid = models.PointField(srid=4326)
     envelope = models.PolygonField(srid=4326)
