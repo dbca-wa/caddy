@@ -90,5 +90,5 @@ def harvest_cadastre(limit=None):
 
     # Afterward, run the update_index management command.
     logger.info('Updating the haystack search_index')
-    management.call_command('update_index', '--remove', '--workers=4')
+    management.call_command('update_index', '--remove', '--workers=2')
     logger.info('Cadastre search_index update completed')

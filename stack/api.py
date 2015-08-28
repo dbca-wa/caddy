@@ -61,9 +61,9 @@ class CadastreResource(ModelResource):
         q = request.GET.get('q', '')
         logger.info('Cadastre geocode query start: {}'.format(q))
         if limit and limit > 0:
-            sqs = SearchQuerySet().filter(content=q)[:limit]
+            sqs = SearchQuerySet().filter(content=q).load_all()[:limit]
         else:
-            sqs = SearchQuerySet().filter(content=q)
+            sqs = SearchQuerySet().filter(content=q).load_all()
 
         if not sqs:
             logger.info('Returning empty cadastre geocode query response')
