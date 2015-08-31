@@ -64,6 +64,7 @@ class CadastreResource(ModelResource):
             sqs = SearchQuerySet().filter(content=q).load_all()[:limit]
         else:
             sqs = SearchQuerySet().filter(content=q).load_all()
+        logger.info('Cadastre geocode query completed')
 
         if not sqs:
             logger.info('Returning empty cadastre geocode query response')
@@ -71,6 +72,7 @@ class CadastreResource(ModelResource):
 
         objects = []
 
+        logger.info('Generating object list response')
         for result in sqs:
             objects.append({
                 'object_id': result.object.object_id,
