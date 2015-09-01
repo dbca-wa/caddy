@@ -1,5 +1,6 @@
 from django.contrib.gis.db import models
 from django.utils.text import Truncator
+import json
 
 
 class Cadastre(models.Model):
@@ -23,3 +24,15 @@ class Cadastre(models.Model):
             return Truncator(self.address_nice).words(15)
         else:
             return Truncator(self.address_text).words(15)
+
+    def geocode_json(self):
+        """Returns serialised JSON for the geocoded object.
+        """
+        d = {
+            'object_id': self.object_id,
+            'address': self.address_nice,
+            'lat': self.centroid.y,
+            'lon': self.centroid.x,
+            'bounds': list(self.envelope.extent),
+        }
+        return json.dumps(d)

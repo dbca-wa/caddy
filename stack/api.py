@@ -1,5 +1,7 @@
 from django.conf.urls import url
 from haystack.query import SearchQuerySet
+from HTMLParser import HTMLParser
+import json
 import logging
 from tastypie.authentication import Authentication
 from tastypie.authorization import Authorization
@@ -59,29 +61,31 @@ class CadastreResource(ModelResource):
             limit = None
 
         q = request.GET.get('q', '')
-        logger.info('Cadastre geocode query start: {}'.format(q))
+        #logger.info('Cadastre geocode query start: {}'.format(q))
         if limit and limit > 0:
             sqs = SearchQuerySet().filter(content=q).load_all()[:limit]
         else:
             sqs = SearchQuerySet().filter(content=q).load_all()
-        logger.info('Cadastre geocode query completed')
+        #logger.info('Cadastre geocode query completed')
 
         if not sqs:
-            logger.info('Returning empty cadastre geocode query response')
+            #logger.info('Returning empty cadastre geocode query response')
             return HttpResponse('[]')
 
         objects = []
 
-        logger.info('Generating object list response')
+        #logger.info('Generating object list response')
         for result in sqs:
-            objects.append({
-                'object_id': result.object.object_id,
-                'address': result.address,
-                'lat': result.object.centroid.y,
-                'lon': result.object.centroid.x,
-                'bounds': list(result.object.envelope.extent),
-            })
+            s = (HTMLParser().unescape(result.geocode_json))
+            objects.append(json.loads(s))
+            #objects.append({
+            #    'object_id': result.object.object_id,
+            #    'address': result.address,
+            #    'lat': result.object.centroid.y,
+            #    'lon': result.object.centroid.x,
+            #    'bounds': list(result.object.envelope.extent),
+            #})
 
         self.log_throttled_access(request)
-        logger.info('Returning cadastre geocode query response')
+        #logger.info('Returning cadastre geocode query response')
         return self.create_response(request, objects)
