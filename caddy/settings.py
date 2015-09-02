@@ -37,14 +37,13 @@ INSTALLED_APPS = (
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'django.contrib.gis',
-    'djorm_pgfulltext',
     'django_extensions',
     'tastypie',
     'django_wsgiserver',
     'corsheaders',
-    'haystack',
+    #'haystack',
     'shack',
-    'stack',
+    #'stack',
 )
 
 MIDDLEWARE_CLASSES = (

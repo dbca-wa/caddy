@@ -1,11 +1,10 @@
 from __future__ import unicode_literals, absolute_import
 from django.contrib.gis.geos import GEOSGeometry
-from django.core import management
 from django.db.migrations.operations.base import Operation
+from django.template import Context, Template
 import json
 import logging
 import os
-import re
 import requests
 
 from .models import Address
@@ -67,6 +66,8 @@ def harvest_cadastre(limit=None):
     url = '{}?service=WFS&version=1.1.0&request=GetFeature&typeName={}&outputFormat=application/json'.format(
         GEOSERVER_URL, CADASTRE_LAYER)
     auth = (os.environ['GEOSERVER_USER'], os.environ['GEOSERVER_PASSWORD'])
+    f = open('shack/templates/shack/address_text.txt').read()
+    template = Template(f)
     # Initially query cadastre for the total features (maxFeatures=1)
     # Iterate over the total, 10000 features at a time.
     r = requests.get(url=url + '&maxFeatures=1', auth=auth)
@@ -85,31 +86,28 @@ def harvest_cadastre(limit=None):
         create_features = []
         updates = 0
         for f in j['features']:
-            #  Query for an existing feature (id == cadastre_id)
-            if Address.objects.filter(cadastre_id=f['id']).exists():
-                add = Address.objects.get(cadastre_id=f['id'])
+            #  Query for an existing feature (id == object_id)
+            if Address.objects.filter(object_id=f['id']).exists():
+                add = Address.objects.get(object_id=f['id'])
                 update = True  # Existing feature
             else:
-                add = Address(cadastre_id=f['id'])
+                add = Address(object_id=f['id'])
                 update = False  # New feature
             poly = GEOSGeometry(json.dumps(f['geometry']))
             add.centroid = poly.centroid  # Precalculate the centroid.
             add.envelope = poly.envelope  # Simplify the geometry bounds.
-            # NOTE: not all fields might be present in the feature properties.
             prop = f['properties']
-            # Strip out defined k, v pairs from the feature.
-            remove = [
-                'addrs_type', 'area_deriv', 'calc_area', 'cent_east', 'cent_lat',
-                'cent_long', 'cent_zone', 'date_creat', 'date_modif',
-                'legal_area', 'objectid', 'pin', 'reg_date', 'render',
-                'render_label', 'scale']
-            for k in remove:
-                if k in prop:
-                    prop.pop(k)
-            # Get a list of not-None property values (strings).
-            prop_values = [str(i) for i in prop.itervalues() if i]
-            address_text = ' '.join(prop_values)  # Join these into the address field.
-            add.address_text = re.sub(' +', ' ', address_text)  # Remove multiple spaces.
+            add.lot_no = prop['lot_no']
+            if prop['addrs_no']:
+                add.address_no = int(prop['addrs_no'])
+            add.address_sfx = prop['addrs_sfx']
+            add.road = prop['road_name']
+            add.road_sfx = prop['road_sfx']
+            add.locality = prop['locality']
+            add.postcode = prop['postcode']
+            add.survey_lot = prop['survey_lot']
+            add.strata = prop['strata']
+            add.reserve = prop['reserve']
             # Construct a "nice", human-friendly address string.
             address_nice = ''
             if 'lot_no' in prop and prop['lot_no']:
@@ -127,31 +125,23 @@ def harvest_cadastre(limit=None):
                     address_nice += '{} '.format(ROADS_ABBREV[prop['road_sfx']])
                 else:
                     address_nice += '{} '.format(prop['road_sfx'])
-                    logger.info('Unknown road suffix: {}'.format(prop['road_sfx']))
             if 'locality' in prop and prop['locality']:
                 address_nice += '{} '.format(prop['locality'])
             if 'postcode' in prop and prop['postcode']:
                 address_nice += '{} '.format(prop['postcode'])
-            if 'survey_lot' in prop and prop['survey_lot']:
-                address_nice += '{} '.format(prop['survey_lot'])
-            if 'strata' in prop and prop['strata']:
-                address_nice += '{} '.format(prop['strata'])
-            if 'reserve' in prop and prop['reserve']:
-                address_nice += '{} '.format(prop['reserve'])
             add.address_nice = address_nice.strip()
-
-            if not update and add.address_text:  # Only create a new Address with a not-null address.
-                create_features.append(add)
+            # Render the address_text field
+            context = Context({'object': add})
+            add.address_text = template.render(context)
             if update:  # Save changes to existing features.
                 add.save()
                 updates += 1
+            else:
+                create_features.append(add)
+
         # Do a bulk_create for each iteration (new features only).
         Address.objects.bulk_create(create_features)
-        print('Created {} addresses, updated {}'.format(len(create_features), updates))
-
-    # After, run the update_search_field management command.
-    print('Updating the search_field index')
-    management.call_command('update_search_field', 'shack')
+        logger.info('Created {} addresses, updated {}'.format(len(create_features), updates))
 
 
 # Source: http://www.ipaustralia.gov.au/about-us/doing-business-with-us/address-standards/

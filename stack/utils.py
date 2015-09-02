@@ -80,10 +80,11 @@ def harvest_cadastre(limit=None):
             if 'postcode' in prop and prop['postcode']:
                 address_nice += '{} '.format(prop['postcode'])
             add.address_nice = address_nice.strip()
-            create_features.append(add)
             if update:  # Save changes to existing features.
                 add.save()
                 updates += 1
+            else:
+                create_features.append(add)
         # Do a bulk_create for each iteration (new features only).
         Cadastre.objects.bulk_create(create_features)
         logger.info('Created {} addresses, updated {}'.format(len(create_features), updates))
