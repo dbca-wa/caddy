@@ -2,7 +2,6 @@
 from __future__ import unicode_literals
 
 from django.db import models, migrations
-import djorm_pgfulltext.fields
 import django.contrib.gis.db.models.fields
 from shack.utils import LoadExtension
 
@@ -21,7 +20,6 @@ class Migration(migrations.Migration):
                 ('address_text', models.TextField()),
                 ('address_nice', models.TextField(null=True, blank=True)),
                 ('centroid', django.contrib.gis.db.models.fields.PointField(srid=4326)),
-                ('search_index', djorm_pgfulltext.fields.VectorField()),
             ],
         ),
         LoadExtension('pg_trgm'),
