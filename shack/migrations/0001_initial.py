@@ -25,5 +25,4 @@ class Migration(migrations.Migration):
             ],
         ),
         LoadExtension('pg_trgm'),
-        LoadExtension('unaccent'),
     ]

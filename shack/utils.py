@@ -36,6 +36,7 @@ class LoadExtension(Operation):
 
 class CreateGinIndex(Operation):
     """Class to create a Postgres GIN index on a field.
+    ALTER TABLE stack_cadastre ADD COLUMN textsearch_index_col tsvector;
     """
     reversible = True
 
@@ -76,7 +77,7 @@ def harvest_cadastre(limit=None):
     if limit and limit < max_features:
         max_features = limit
     for i in range(0, total_features, 10000):
-        print('Querying features {} to {}'.format(i, i+9999))
+        logger.info('Querying features {} to {}'.format(i, max_features + i))
         # Query the server for features, using startIndex.
         q = url + '&maxFeatures={}&startIndex={}'.format(max_features, i)
         r = requests.get(url=q, auth=auth)
