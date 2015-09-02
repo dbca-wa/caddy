@@ -1,5 +1,5 @@
 from django.conf.urls import url
-import logging
+#import logging
 from tastypie.authentication import Authentication
 from tastypie.authorization import Authorization
 from tastypie.cache import SimpleCache
@@ -10,7 +10,7 @@ from tastypie.throttle import CacheThrottle
 from tastypie.utils import trailing_slash
 from .models import Address
 
-logger = logging.getLogger('caddy')
+#logger = logging.getLogger('caddy')
 
 
 class AddressResource(ModelResource):
@@ -56,27 +56,33 @@ class AddressResource(ModelResource):
             limit = None
 
         q = request.GET.get('q', '')
-        logger.info('Address geocode query start: {}'.format(q))
-        if limit and limit > 0:
-            qs = Address.objects.search(q).values('id', 'address_nice', 'centroid', 'envelope')[:limit]
-        else:
-            qs = Address.objects.search(q).values('id', 'address_nice', 'centroid', 'envelope')
+        if not q:
+            #logger.info('Returning empty geocode query response')
+            return HttpResponse('[]')
 
-        if not qs.exists():
-            logger.info('Returning empty geocode query response')
+        #logger.info('Address geocode query start: {}'.format(q))
+        raw_query = "SELECT * FROM shack_address WHERE tsv @@ plainto_tsquery('{}')".format(q)
+        if limit and limit > 0:
+            # Note qs is a RawQuerySet, hence we evaluate it here.
+            qs = Address.objects.raw(raw_query)[:limit]
+        else:
+            qs = Address.objects.raw(raw_query)[:]
+
+        if len(qs) == 0:
+            #logger.info('Returning empty geocode query response')
             return HttpResponse('[]')
 
         objects = []
 
         for obj in qs:
             objects.append({
-                'id': obj['id'],
-                'address': obj['address_nice'],
-                'lat': obj['centroid'].y,
-                'lon': obj['centroid'].x,
-                'bounds': list(obj['envelope'].extent) if obj['envelope'] else []
+                'id': obj.pk,
+                'address': obj.address_nice,
+                'lat': obj.centroid.y,
+                'lon': obj.centroid.x,
+                'bounds': list(obj.envelope.extent) if obj.envelope else []
             })
 
         self.log_throttled_access(request)
-        logger.info('Returning geocode query response')
+        #logger.info('Returning geocode query response')
         return self.create_response(request, objects)
