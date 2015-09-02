@@ -41,9 +41,7 @@ INSTALLED_APPS = (
     'tastypie',
     'django_wsgiserver',
     'corsheaders',
-    #'haystack',
     'shack',
-    #'stack',
 )
 
 MIDDLEWARE_CLASSES = (
@@ -133,12 +131,3 @@ LOGGING = {
 # django-cors-headers settings
 CORS_ORIGIN_ALLOW_ALL = True
 CORS_ALLOW_METHODS = ('GET',)
-
-
-# django-haystack configuration
-HAYSTACK_CONNECTIONS = {
-    'default': {
-        'ENGINE': 'haystack.backends.whoosh_backend.WhooshEngine',
-        'PATH': os.path.join(BASE_DIR, 'whoosh_index'),
-    },
-}

@@ -33,30 +33,6 @@ class LoadExtension(Operation):
         return "Creates extension {}".format(self.name)
 
 
-class CreateGinIndex(Operation):
-    """Class to create a Postgres GIN index on a field.
-    ALTER TABLE stack_cadastre ADD COLUMN textsearch_index_col tsvector;
-    """
-    reversible = True
-
-    def __init__(self, idx_name, table, field):
-        self.idx_name = idx_name
-        self.table = table
-        self.field = field
-
-    def state_forwards(self, app_label, state):
-        pass
-
-    def database_forwards(self, app_label, schema_editor, from_state, to_state):
-        schema_editor.execute("CREATE INDEX {} ON {} USING gin(to_tsvector('english', {}))".format(self.idx_name, self.table, self.field))
-
-    def database_backwards(self, app_label, schema_editor, from_state, to_state):
-        schema_editor.execute("DROP INDEX {}".format(self.idx_name))
-
-    def describe(self):
-        return "Creates index {}".format(self.idx_name)
-
-
 def harvest_cadastre(limit=None):
     """Query the cadastre WFS for features. ``limit`` is optional integer of the
     maximum number of features to query.
