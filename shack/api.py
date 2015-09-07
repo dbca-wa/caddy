@@ -61,7 +61,26 @@ class AddressResource(ModelResource):
             return HttpResponse('[]')
 
         #logger.info('Address geocode query start: {}'.format(q))
-        raw_query = "SELECT * FROM shack_address WHERE tsv @@ plainto_tsquery('{}')".format(q)
+        
+        
+
+	#This is to allow for partial address searching
+	
+	words = []
+	for word in q.split():
+	     	try:
+			int(word)
+			words.append(word)
+		except:
+			words.append(word+':*') 
+	words = '& '.join(words)
+	
+	#//partial address searching
+
+	raw_query = "SELECT * FROM shack_address WHERE tsv @@ to_tsquery('{}')".format(words)
+	
+	
+
         if limit and limit > 0:
             # Note qs is a RawQuerySet, hence we evaluate it here.
             qs = Address.objects.raw(raw_query)[:limit]
