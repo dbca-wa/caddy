@@ -39,7 +39,7 @@ def harvest_cadastre(limit=None):
     """
     GEOSERVER_URL = os.environ['GEOSERVER_URL']
     CADASTRE_LAYER = os.environ['CADASTRE_LAYER']
-    url = '{}?service=WFS&version=1.1.0&request=GetFeature&typeName={}&outputFormat=application/json'.format(
+    url = '{}?service=WFS&version=1.1.0&request=GetFeature&typeName={}&outputFormat=application/json&sortBy=ogc_fid'.format(
         GEOSERVER_URL, CADASTRE_LAYER)
     auth = (os.environ['GEOSERVER_USER'], os.environ['GEOSERVER_PASSWORD'])
     f = open('shack/templates/shack/address_text.txt').read()
@@ -73,7 +73,6 @@ def harvest_cadastre(limit=None):
             add.centroid = poly.centroid  # Precalculate the centroid.
             add.envelope = poly.envelope  # Simplify the geometry bounds.
             prop = f['properties']
-            add.lot_no = prop['lot_no']
             if prop['addrs_no']:
                 add.address_no = int(prop['addrs_no'])
             add.address_sfx = prop['addrs_sfx']
@@ -86,8 +85,8 @@ def harvest_cadastre(limit=None):
             add.reserve = prop['reserve']
             # Construct a "nice", human-friendly address string.
             address_nice = ''
-            if 'lot_no' in prop and prop['lot_no']:
-                address_nice += 'Lot {} '.format(prop['lot_no'])
+            if 'survey_lot' in prop and prop['survey_lot']:
+                address_nice += '{} '.format(prop['survey_lot'])
             if 'addrs_no' in prop and prop['addrs_no']:
                 if 'addrs_sfx' in prop and prop['addrs_sfx']:
                     address_nice += '{}{} '.format(prop['addrs_no'], prop['addrs_sfx'])
