@@ -1,16 +1,11 @@
 """
 WSGI config for caddy project.
-
 It exposes the WSGI callable as a module-level variable named ``application``.
-
-For more information on this file, see
-https://docs.djangoproject.com/en/1.8/howto/deployment/wsgi/
 """
-
+import confy
 import os
-
 from django.core.wsgi import get_wsgi_application
 
-os.environ.setdefault("DJANGO_SETTINGS_MODULE", "caddy.settings")
-
+confy.read_environment_file('.env')
+os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'caddy.settings')
 application = get_wsgi_application()

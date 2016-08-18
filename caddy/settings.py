@@ -3,15 +3,20 @@ Django settings for caddy project.
 """
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
-import dj_database_url
+from confy import env, database
 import os
+import sys
 
+# Project paths
+# Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 PROJECT_DIR = os.path.join(BASE_DIR, 'caddy')
+# Add PROJECT_DIR to the system path.
+sys.path.insert(0, PROJECT_DIR)
 
-
-SECRET_KEY = os.environ['SECRET_KEY']
-DEBUG = True if os.environ.get('DEBUG', False) else False
+# Application definition
+DEBUG = env('DEBUG', False)
+SECRET_KEY = env('SECRET_KEY')
 INTERNAL_IPS = ['127.0.0.1', '::1']
 if not DEBUG:
     # UAT and Production hosts
@@ -34,24 +39,21 @@ INSTALLED_APPS = (
     'django.contrib.auth',
     'django.contrib.contenttypes',
     'django.contrib.sessions',
-    'django.contrib.messages',
     'django.contrib.staticfiles',
     'django.contrib.gis',
     'django_extensions',
     'tastypie',
-    'django_wsgiserver',
     'corsheaders',
     'shack',
 )
 
 MIDDLEWARE_CLASSES = (
-    'django.contrib.sessions.middleware.SessionMiddleware',
     'corsheaders.middleware.CorsMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
+    'django.contrib.sessions.middleware.SessionMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.auth.middleware.SessionAuthenticationMiddleware',
-    'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'django.middleware.security.SecurityMiddleware',
 )
@@ -68,7 +70,6 @@ TEMPLATES = [
                 'django.template.context_processors.debug',
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
-                'django.contrib.messages.context_processors.messages',
             ],
         },
     },
@@ -77,9 +78,10 @@ TEMPLATES = [
 WSGI_APPLICATION = 'caddy.wsgi.application'
 
 
+# Database configuration
 DATABASES = {
     # Defined in the DATABASE_URL env variable.
-    'default': dj_database_url.config(),
+    'default': database.config(),
 }
 
 

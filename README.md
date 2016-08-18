@@ -10,30 +10,30 @@ for geocoding via minimal a Django application.
 * Create a virtualenv and install requirements: `pip install -r
   requirements.txt`
 * Define environment settings in `.env`.
-* Create a database and run `honcho run python manage.py migrate`
-* Run the management command to harvest data: `honcho run python
-  manage.py harvest_cadastre`
+* Create a database and run: `python manage.py migrate`
+* Run the management command to harvest data: `python manage.py harvest_cadastre`
 
 # Environment settings
 
-The following environment settings should be defined in a `.env` file
-(used by `honcho`):
+This project uses **django-confy** to set environment variables (in a `.env` file).
+The following variables are required for the project to run:
 
-    DEBUG=True
-    PORT=8080
     DATABASE_URL="postgres://USER:PASSWORD@HOST:PORT/NAME"
     SECRET_KEY="ThisIsASecretKey"
-    GEOSERVER_URL="http://geoserver.dpaw.wa.gov.au/geoserver/ows"
+
+Variables below may also need to be defined (context-dependent):
+
+    GEOSERVER_URL="https://geoserver.service.url/"
     GEOSERVER_USER="username"
     GEOSERVER_PASSWORD="password"
-    CADASTRE_LAYER="cddp:cadastre"
+    CADASTRE_LAYER="workspace:layer"
 
 *NOTE*: the `GEOSERVER_*` settings are to a WFS service endpoint. The
 `CADASTRE_LAYER` is the WFS layer (**workspace:layer**).
 
 # Usage
 
-Run the application with `honcho start`. Visit the API url and provide a
+Run the application with `runserver`. Visit the API url and provide a
 query parameter `q` to search, e.g.:
 
     http://HOST/api/v1/address/geocode/?q=perth+wa&limit=5
