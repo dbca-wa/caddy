@@ -6,7 +6,7 @@ from django.db import migrations
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('shack', '0004_auto_20150902_0222'),
+        ('shack', '0001_initial'),
     ]
 
     operations = [

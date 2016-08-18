@@ -38,72 +38,79 @@ def harvest_cadastre(limit=None):
     maximum number of features to query.
     """
     GEOSERVER_URL = os.environ['GEOSERVER_URL']
-    CADASTRE_LAYER = os.environ['CADASTRE_LAYER']
-    url = '{}?service=WFS&version=1.1.0&request=GetFeature&typeName={}&outputFormat=application/json&sortBy=ogc_fid'.format(
-        GEOSERVER_URL, CADASTRE_LAYER)
+    params = {
+        'service': 'WFS',
+        'version': '1.1.0',
+        'request': 'GetFeature',
+        'typeName': os.environ['CADASTRE_LAYER'],
+        'outputFormat': 'application/json',
+        'sortBy': 'ogc_fid',
+        'maxFeatures': 1,
+    }
     auth = (os.environ['GEOSERVER_USER'], os.environ['GEOSERVER_PASSWORD'])
     f = open('shack/templates/shack/address_text.txt').read()
     template = Template(f)
-    # Initially query cadastre for the total features (maxFeatures=1)
-    # Iterate over the total, 10000 features at a time.
-    r = requests.get(url=url + '&maxFeatures=1', auth=auth)
+    # Initially query cadastre for the total feature count (maxfeatures=1)
+    # Iterate over the total, 1000 features at a time.
+    r = requests.get(url=GEOSERVER_URL, auth=auth, params=params)
     total_features = r.json()['totalFeatures']
     if limit and limit < total_features:  # Optional limit on total features imported.
         total_features = limit
-    max_features = 10000
-    if limit and limit < max_features:
-        max_features = limit
-    for i in range(0, total_features, 10000):
-        logger.info('Querying features {} to {}'.format(i, max_features + i))
+    params['maxFeatures'] = 1000
+    if limit and limit < params['maxFeatures']:
+        params['maxFeatures'] = limit
+    for i in range(0, total_features, params['maxFeatures']):
+        logger.info('Querying features {} to {}'.format(i, i + params['maxFeatures']))
         # Query the server for features, using startIndex.
-        q = url + '&maxFeatures={}&startIndex={}'.format(max_features, i)
-        r = requests.get(url=q, auth=auth)
+        params['startIndex'] = i
+        r = requests.get(url=GEOSERVER_URL, auth=auth, params=params)
         j = r.json()
         create_features = []
         updates = 0
         for f in j['features']:
-            #  Query for an existing feature (id == object_id)
-            if Address.objects.filter(object_id=f['id']).exists():
-                add = Address.objects.get(object_id=f['id'])
+            #  Query for an existing feature (PIN == object_id)
+            if Address.objects.filter(object_id=f['properties']['pin']).exists():
+                add = Address.objects.get(object_id=f['properties']['pin'])
                 update = True  # Existing feature
             else:
-                add = Address(object_id=f['id'])
+                add = Address(object_id=f['properties']['pin'])
                 update = False  # New feature
             poly = GEOSGeometry(json.dumps(f['geometry']))
             add.centroid = poly.centroid  # Precalculate the centroid.
             add.envelope = poly.envelope  # Simplify the geometry bounds.
             prop = f['properties']
-            if prop['addrs_no']:
-                add.address_no = int(prop['addrs_no'])
-            add.address_sfx = prop['addrs_sfx']
-            add.road = prop['road_name']
-            add.road_sfx = prop['road_sfx']
-            add.locality = prop['locality']
-            add.postcode = prop['postcode']
-            add.survey_lot = prop['survey_lot']
-            add.strata = prop['strata']
-            add.reserve = prop['reserve']
-            # Construct a "nice", human-friendly address string.
-            address_nice = ''
+            address_nice = ''  # Human-readable "nice" address.
             if 'survey_lot' in prop and prop['survey_lot']:
+                add.data['survey_lot'] = prop['survey_lot']
                 address_nice += '{} '.format(prop['survey_lot'])
             if 'addrs_no' in prop and prop['addrs_no']:
-                if 'addrs_sfx' in prop and prop['addrs_sfx']:
-                    address_nice += '{}{} '.format(prop['addrs_no'], prop['addrs_sfx'])
-                else:
-                    address_nice += '{} '.format(prop['addrs_no'])
+                add.data['address_no'] = int(prop['addrs_no'])
+                address_nice += '{}'.format(prop['addrs_no'])
+            if 'addrs_sfx' in prop and prop['addrs_sfx']:
+                add.data['address_sfx'] = prop['addrs_sfx']
+                address_nice += '{} '.format(prop['addrs_sfx'])
+            else:  # No suffix - add a space instead.
+                address_nice += ' '
             if 'road_name' in prop and prop['road_name']:
+                add.data['road'] = prop['road_name']
                 address_nice += '{} '.format(prop['road_name'])
             if 'road_sfx' in prop and prop['road_sfx']:
+                add.data['road_sfx'] = prop['road_sfx']
                 # Try to match an existing suffix.
                 if prop['road_sfx'] in ROADS_ABBREV:
                     address_nice += '{} '.format(ROADS_ABBREV[prop['road_sfx']])
                 else:
                     address_nice += '{} '.format(prop['road_sfx'])
             if 'locality' in prop and prop['locality']:
+                add.data['locality'] = prop['locality']
                 address_nice += '{} '.format(prop['locality'])
             if 'postcode' in prop and prop['postcode']:
+                add.data['postcode'] = prop['postcode']
                 address_nice += '{} '.format(prop['postcode'])
+            # Other fields:
+            for f in ['strata', 'crn_allot', 'reserve', 'pin', 'landuse', 'res_no', 'res_class', 'res_vest']:
+                if f in prop and prop[f]:
+                    add.data[f] = prop[f]
             add.address_nice = address_nice.strip()
             # Render the address_text field
             context = Context({'object': add})

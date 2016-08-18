@@ -1,5 +1,4 @@
 from django.conf.urls import url
-#import logging
 from tastypie.authentication import Authentication
 from tastypie.authorization import Authorization
 from tastypie.cache import SimpleCache
@@ -9,8 +8,6 @@ from tastypie.serializers import Serializer
 from tastypie.throttle import CacheThrottle
 from tastypie.utils import trailing_slash
 from .models import Address
-
-#logger = logging.getLogger('caddy')
 
 
 class AddressResource(ModelResource):
@@ -24,7 +21,6 @@ class AddressResource(ModelResource):
         filtering = {
             'id': ALL,
             'cadastre_id': ALL,
-            'address': ALL,
             'centroid': ALL,
             'envelope': ALL,
         }
@@ -57,29 +53,20 @@ class AddressResource(ModelResource):
 
         q = request.GET.get('q', '')
         if not q:
-            #logger.info('Returning empty geocode query response')
             return HttpResponse('[]')
 
-        #logger.info('Address geocode query start: {}'.format(q))
-        
-        
+        # This is to allow for partial address searching
+        words = []
+        for word in q.split():
+            try:
+                int(word)
+                words.append(word)
+            except:
+                words.append(word+':*')
+        words = '& '.join(words)
 
-	#This is to allow for partial address searching
-	
-	words = []
-	for word in q.split():
-	     	try:
-			int(word)
-			words.append(word)
-		except:
-			words.append(word+':*') 
-	words = '& '.join(words)
-	
-	#//partial address searching
-
-	raw_query = "SELECT * FROM shack_address WHERE tsv @@ to_tsquery('{}')".format(words)
-	
-	
+        # Partial address searching
+        raw_query = "SELECT * FROM shack_address WHERE tsv @@ to_tsquery('{}')".format(words)
 
         if limit and limit > 0:
             # Note qs is a RawQuerySet, hence we evaluate it here.
@@ -88,7 +75,6 @@ class AddressResource(ModelResource):
             qs = Address.objects.raw(raw_query)[:]
 
         if len(qs) == 0:
-            #logger.info('Returning empty geocode query response')
             return HttpResponse('[]')
 
         objects = []
@@ -103,5 +89,4 @@ class AddressResource(ModelResource):
             })
 
         self.log_throttled_access(request)
-        #logger.info('Returning geocode query response')
         return self.create_response(request, objects)
