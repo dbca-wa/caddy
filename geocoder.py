@@ -6,7 +6,8 @@ from sqlalchemy.orm import sessionmaker, scoped_session
 
 
 confy.read_environment_file()
-engine = create_engine(confy.env('DATABASE_URL'))
+database_url = confy.env('DATABASE_URL').replace('postgis', 'postgres')
+engine = create_engine(database_url)
 Session = scoped_session(sessionmaker(bind=engine))
 s = Session()
 
@@ -17,11 +18,12 @@ def geocode():
     q = request.query.q or ''
     if not q:
         return '[]'
+    limit = request.query.limit or 5
     words = q.split()
     words = ' & '.join(words)
     # Partial address searching
     sql = "SELECT address_nice, ST_X(centroid), ST_Y(centroid) FROM shack_address WHERE tsv @@ to_tsquery('{}')".format(words)
-    result = s.execute(sql).fetchmany(5)  # Return up to 5 results.
+    result = s.execute(sql).fetchmany(int(limit))
     j = []
     if result:
         for i in result:
