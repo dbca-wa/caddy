@@ -63,7 +63,7 @@ class AddressResource(ModelResource):
                 words.append(word)
             except:
                 words.append(word+':*')
-        words = '& '.join(words)
+        words = ' & '.join(words)
 
         # Partial address searching
         raw_query = "SELECT * FROM shack_address WHERE tsv @@ to_tsquery('{}')".format(words)
