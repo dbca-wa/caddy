@@ -21,7 +21,6 @@ def geocode():
     words = ' & '.join(words)
     # Partial address searching
     sql = "SELECT address_nice, ST_X(centroid), ST_Y(centroid) FROM shack_address WHERE tsv @@ to_tsquery('{}')".format(words)
-    print(sql)
     result = s.execute(sql).fetchmany(5)  # Return up to 5 results.
     j = []
     if result:
