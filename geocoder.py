@@ -1,3 +1,4 @@
+#!/usr/bin/python
 from bottle import route, request, response, run
 import confy
 import json
@@ -15,6 +16,10 @@ s = Session()
 @route('/api/geocode')
 def geocode():
     response.content_type = 'application/json'
+    # Allow cross-origin GET requests.
+    response.headers['Access-Control-Allow-Origin'] = '*'
+    response.headers['Access-Control-Allow-Methods'] = 'GET, OPTIONS'
+    response.headers['Access-Control-Allow-Headers'] = 'Origin, Accept, Content-Type, X-Requested-With, X-CSRF-Token'
     q = request.query.q or ''
     if not q:
         return '[]'
