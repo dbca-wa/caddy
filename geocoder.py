@@ -1,5 +1,5 @@
 #!/usr/bin/python
-from bottle import Bottle, route, request, response, run
+from bottle import Bottle, route, static_file, request, response, run
 import confy
 import json
 from sqlalchemy import create_engine
@@ -12,6 +12,11 @@ engine = create_engine(database_url)
 Session = scoped_session(sessionmaker(bind=engine))
 s = Session()
 app = application = Bottle()
+
+
+@app.route('/')
+def index():
+    return static_file('index.html', root='caddy/templates')
 
 
 @app.route('/api/geocode')

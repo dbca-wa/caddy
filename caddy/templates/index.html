@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <title>Geocoder</title>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <meta name="description" content="Cadastre spatial dataset geocoder">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <link rel="shortcut icon" href="/static/favicon.ico">
+        <link rel="stylesheet" href="//static.dpaw.wa.gov.au/static/libs/pure/0.6.0/pure-min.css">
+        <style>
+            .preformatted {
+                    font-family: monospace;
+                        white-space: pre;
+            }
+        </style>
+    </head>
+    <body>
+        <!--[if lte IE 9]>
+        <p class="browserupgrade">You are using an <strong>outdated</strong> browser.
+        Please <a href="http://browsehappy.com/">upgrade your browser</a> to improve your experience.</p>
+        <![endif]-->
+        <h1>Geocoder</h1>
+        <p>Submit an address to the API endpoint <strong>/api/geocode?q=ADDRESS+STRING</strong></p>
+        <form id="address-search-form" class="pure-form">
+            <legend>Search for an address:</legend>
+            <input id="address" type="text" class="pure-input-1-2" placeholder="E.g. 17 dick perry avenue kensington">
+        </form>
+        <p>API response:</p>
+        <div id="api-response" class="preformatted"></div>
+    </body>
+    <script src="//static.dpaw.wa.gov.au/static/libs/jquery/3.1.1/jquery.min.js"></script>
+    <script>
+        $(function() {
+            $('#address-search-form').on("submit",function(e) {
+                e.preventDefault(); // cancel the submit
+                var address = $("input#address").val();
+                var resp = "";
+                var json = $.getJSON("/api/geocode", {q: address}, function(data) {
+                    resp = JSON.stringify(data, null, 2);
+                    $("div#api-response").html(resp);
+                });
+            });
+        });
+    </script>
+</html>
