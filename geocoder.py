@@ -1,5 +1,5 @@
 #!/usr/bin/python
-from bottle import route, request, response, run
+from bottle import Bottle, route, request, response, run
 import confy
 import json
 from sqlalchemy import create_engine
@@ -11,9 +11,10 @@ database_url = confy.env('DATABASE_URL').replace('postgis', 'postgres')
 engine = create_engine(database_url)
 Session = scoped_session(sessionmaker(bind=engine))
 s = Session()
+app = application = Bottle()
 
 
-@route('/api/geocode')
+@app.route('/api/geocode')
 def geocode():
     response.content_type = 'application/json'
     # Allow cross-origin GET requests.
@@ -42,4 +43,5 @@ def geocode():
         return '[]'
 
 
-run(host='0.0.0.0', port=confy.env('PORT', 8811), debug=confy.env('DEBUG', False))
+if __name__ == '__main__':
+    run(app, host='0.0.0.0', port=confy.env('PORT', 8811), debug=confy.env('DEBUG', False))
