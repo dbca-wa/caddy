@@ -92,15 +92,19 @@ def harvest_cadastre(limit=None):
             else:  # No suffix - add a space instead.
                 address_nice += ' '
             if 'road_name' in prop and prop['road_name']:
-                add.data['road'] = prop['road_name']
-                address_nice += '{} '.format(prop['road_name'])
-            if 'road_sfx' in prop and prop['road_sfx']:
-                add.data['road_sfx'] = prop['road_sfx']
-                # Try to match an existing suffix.
-                if prop['road_sfx'] in ROADS_ABBREV:
-                    address_nice += '{} '.format(ROADS_ABBREV[prop['road_sfx']])
+                if 'road_sfx' in prop and prop['road_sfx']:
+                    add.data['road'] = '{} {}'.format(prop['road_name'], prop['road_sfx'])
+                    address_nice += '{} '.format(prop['road_name'])
+                    add.data['road_pfx'] = prop['road_name']
+                    add.data['road_sfx'] = prop['road_sfx']
+                    # Try to match an existing suffix.
+                    if prop['road_sfx'] in ROADS_ABBREV:
+                        address_nice += '{} '.format(ROADS_ABBREV[prop['road_sfx']])
+                    else:
+                        address_nice += '{} '.format(prop['road_sfx'])
                 else:
-                    address_nice += '{} '.format(prop['road_sfx'])
+                    add.data['road'] = prop['road_name']
+                    address_nice += '{} '.format(prop['road_name'])
             if 'locality' in prop and prop['locality']:
                 add.data['locality'] = prop['locality']
                 address_nice += '{} '.format(prop['locality'])
