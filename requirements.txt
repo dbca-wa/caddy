@@ -1,8 +1,9 @@
-Django==1.10.3
-psycopg2==2.6.2
-sqlalchemy==1.1.4
-django-extensions==1.6.7
-requests==2.11.1
-django-tastypie==0.13.3
-django-cors-headers==1.1.0
-https://static.dpaw.wa.gov.au/static/py/dpaw-utils/dist/dpaw-utils-0.3a11.tar.gz
+Django==1.11.7
+psycopg2==2.7.3.2
+sqlalchemy==1.1.15
+django-extensions==1.9.7
+requests==2.18.4
+django-tastypie==0.14
+django-cors-headers==2.1.0
+ujson==1.35
+git+https://github.com/parksandwildlife/dpaw-utils.git@0.3a16#egg=dpaw-utils

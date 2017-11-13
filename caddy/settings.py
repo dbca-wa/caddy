@@ -17,23 +17,15 @@ sys.path.insert(0, PROJECT_DIR)
 # Application definition
 DEBUG = env('DEBUG', False)
 SECRET_KEY = env('SECRET_KEY')
-INTERNAL_IPS = ['127.0.0.1', '::1']
+CSRF_COOKIE_SECURE = env('CSRF_COOKIE_SECURE', False)
+SESSION_COOKIE_SECURE = env('SESSION_COOKIE_SECURE', False)
 if not DEBUG:
-    # UAT and Production hosts
-    ALLOWED_HOSTS = [
-        'caddy.dpaw.wa.gov.au',
-        'caddy.dpaw.wa.gov.au.',
-        'caddy-uat.dpaw.wa.gov.au',
-        'caddy-uat.dpaw.wa.gov.au.',
-    ]
-    SECURE_CONTENT_TYPE_NOSNIFF = True
-    CSRF_COOKIE_SECURE = True
-    SESSION_COOKIE_SECURE = True
-    CSRF_COOKIE_HTTPONLY = True
-
-
-# Application definition
-
+    ALLOWED_HOSTS = env('ALLOWED_DOMAINS', '').split(',')
+else:
+    ALLOWED_HOSTS = ['*']
+INTERNAL_IPS = ['127.0.0.1', '::1']
+ROOT_URLCONF = 'caddy.urls'
+WSGI_APPLICATION = 'caddy.wsgi.application'
 INSTALLED_APPS = (
     'django.contrib.admin',
     'django.contrib.auth',
@@ -46,8 +38,7 @@ INSTALLED_APPS = (
     'corsheaders',
     'shack',
 )
-
-MIDDLEWARE_CLASSES = (
+MIDDLEWARE = [
     'corsheaders.middleware.CorsMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -56,10 +47,7 @@ MIDDLEWARE_CLASSES = (
     'django.contrib.auth.middleware.SessionAuthenticationMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'django.middleware.security.SecurityMiddleware',
-)
-
-ROOT_URLCONF = 'caddy.urls'
-
+]
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
@@ -74,8 +62,6 @@ TEMPLATES = [
         },
     },
 ]
-
-WSGI_APPLICATION = 'caddy.wsgi.application'
 
 
 # Database configuration
@@ -119,7 +105,8 @@ LOGGING = {
             'class': 'logging.handlers.RotatingFileHandler',
             'filename': os.path.join(BASE_DIR, 'logs', 'caddy.log'),
             'formatter': 'verbose',
-            'maxBytes': '5242880'
+            'maxBytes': 1024 * 1024 * 5,
+            'backupCount': 5,
         },
     },
     'loggers': {

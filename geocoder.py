@@ -1,7 +1,7 @@
 #!/usr/bin/python
 from bottle import Bottle, route, static_file, request, response, run
 import confy
-import json
+import ujson as json
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, scoped_session
 
