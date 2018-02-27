@@ -21,7 +21,7 @@ The following variables are required for the project to run:
     DATABASE_URL="postgres://USER:PASSWORD@HOST:PORT/NAME"
     SECRET_KEY="ThisIsASecretKey"
 
-Variables below may also need to be defined (context-dependent):
+Optional variables below may also need to be defined (context-dependent):
 
     GEOSERVER_URL="https://geoserver.service.url/"
     GEOSERVER_USER="username"
@@ -33,8 +33,11 @@ Variables below may also need to be defined (context-dependent):
 
 # Usage
 
-Run the application with `runserver`. Visit the API url and provide a
-query parameter `q` to search, e.g.:
+Run the frontend application with `python geocoder.py` (the default port
+is 8081, which can be overridden by defining a `PORT` environment variable.
+
+Run the Django application using the  `runserver` management command. Visit
+the API url and provide a query parameter `q` to search, e.g.:
 
     http://HOST/api/v1/address/geocode/?q=perth+wa&limit=5
 
