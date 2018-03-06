@@ -4,6 +4,6 @@ sqlalchemy==1.2.4
 django-extensions==2.0.0
 requests==2.18.4
 django-tastypie==0.14
-django-cors-headers==2.1.0
+django-cors-headers==2.2.0
 ujson==1.35
 git+https://github.com/parksandwildlife/dpaw-utils.git@0.3a16#egg=dpaw-utils
