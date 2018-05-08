@@ -1,6 +1,6 @@
 # Caddy
 
-Caddy is a small experiment to harvest land parcel legal description
+Caddy is a small application to harvest land parcel legal description
 fields, index address data and expose it as a searchable API
 for geocoding via minimal a Django application.
 
@@ -67,4 +67,4 @@ deliberately limited to a "human readable" address, object centroid and
 bounding box.
 
 Further reference:
-http://www.postgresql.org/docs/9.3/static/textsearch.html
+http://www.postgresql.org/docs/current/static/textsearch.html

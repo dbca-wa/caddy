@@ -118,7 +118,7 @@ def harvest_cadastre(limit=None):
             add.address_nice = address_nice.strip()
             # Render the address_text field
             context = Context({'object': add})
-            add.address_text = template.render(context)
+            add.address_text = template.render(context).strip()
             if update:  # Save changes to existing features.
                 add.save()
                 updates += 1

@@ -1,7 +1,7 @@
 #!/usr/bin/python
 from bottle import Bottle, route, static_file, request, response
 import confy
-import ujson as json
+import ujson
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, scoped_session
 import bjoern
@@ -44,7 +44,7 @@ def geocode():
                 'lon': i[1],
                 'lat': i[2]
             })
-        return json.dumps(j)
+        return ujson.dumps(j)
     else:
         return '[]'
 
