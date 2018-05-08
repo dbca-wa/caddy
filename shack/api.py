@@ -1,4 +1,4 @@
-from django.conf.urls import url
+from django.urls import re_path
 from tastypie.authentication import Authentication
 from tastypie.authorization import Authorization
 from tastypie.cache import SimpleCache
@@ -30,7 +30,7 @@ class AddressResource(ModelResource):
 
     def prepend_urls(self):
         return [
-            url(
+            re_path(
                 r'^(?P<resource_name>{})/geocode{}$'.format(
                     self._meta.resource_name, trailing_slash()),
                 self.wrap_view('geocode'), name='api_geocode'

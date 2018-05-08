@@ -1,8 +1,7 @@
-from __future__ import unicode_literals, absolute_import
 from django.contrib.gis.geos import GEOSGeometry
 from django.db.migrations.operations.base import Operation
 from django.template import Context, Template
-import json
+import ujson
 import logging
 import os
 import requests
@@ -75,7 +74,7 @@ def harvest_cadastre(limit=None):
             else:
                 add = Address(object_id=f['properties']['pin'])
                 update = False  # New feature
-            poly = GEOSGeometry(json.dumps(f['geometry']))
+            poly = GEOSGeometry(ujson.dumps(f['geometry']))
             add.centroid = poly.centroid  # Precalculate the centroid.
             add.envelope = poly.envelope  # Simplify the geometry bounds.
             prop = f['properties']
