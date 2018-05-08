@@ -1,15 +1,16 @@
 #!/usr/bin/python
-from bottle import Bottle, route, static_file, request, response, run
+from bottle import Bottle, route, static_file, request, response
 import confy
 import ujson as json
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, scoped_session
+import bjoern
 
 
 confy.read_environment_file()
 database_url = confy.env('DATABASE_URL').replace('postgis', 'postgres')
 engine = create_engine(database_url)
-Session = scoped_session(sessionmaker(bind=engine))
+Session = scoped_session(sessionmaker(bind=engine, autoflush=True))
 s = Session()
 app = application = Bottle()
 
@@ -49,4 +50,4 @@ def geocode():
 
 
 if __name__ == '__main__':
-    run(app, host='0.0.0.0', port=confy.env('PORT', 8811), debug=confy.env('DEBUG', False))
+    bjoern.run(wsgi_app=app,host='0.0.0.0', port=confy.env('PORT', 8811), reuse_port=True)
