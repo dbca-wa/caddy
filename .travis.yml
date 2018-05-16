@@ -19,6 +19,8 @@ env:
         - SECRET_KEY=SecretKeyForTravis
         - DATABASE_URL="postgis://postgres@localhost:5432/travis_ci_test"
 install:
+    - sudo apt-get -qq update
+    - sudo apt-get install -y libev-dev
     - pip install --upgrade pip
     - pip install --upgrade setuptools
     - pip install -r requirements.txt
@@ -26,7 +28,5 @@ before_script:
     - psql -U postgres -c "create database travis_ci_test;"
     - psql -U postgres -d travis_ci_test -c "create extension postgis;"
     - python manage.py migrate --noinput
-    - sudo apt-get -qq update
-    - sudo apt-get install -y libev-dev
 script:
     - python manage.py check
