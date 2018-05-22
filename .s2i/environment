@@ -1,1 +1,1 @@
-APP_MODULE=geocoder:app
+APP_MODULE=caddy.wsgi:application
