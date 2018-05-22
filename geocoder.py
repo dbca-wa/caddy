@@ -4,7 +4,6 @@ import confy
 import ujson
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, scoped_session
-import bjoern
 
 
 confy.read_environment_file()
@@ -50,4 +49,5 @@ def geocode():
 
 
 if __name__ == '__main__':
-    bjoern.run(wsgi_app=app,host='0.0.0.0', port=confy.env('PORT', 8811), reuse_port=True)
+    from bottle import run
+    run(application, host='0.0.0.0', port=confy.env('PORT', 8811))
