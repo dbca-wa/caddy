@@ -1,12 +1,15 @@
 #!/usr/bin/python
 from bottle import Bottle, route, static_file, request, response
 import confy
+import os
 import ujson
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, scoped_session
 
 
-confy.read_environment_file()
+dot_env = os.path.join(os.getcwd(), '.env')
+if os.path.exists(dot_env):
+    confy.read_environment_file()
 database_url = confy.env('DATABASE_URL').replace('postgis', 'postgres')
 engine = create_engine(database_url)
 Session = scoped_session(sessionmaker(bind=engine, autoflush=True))
