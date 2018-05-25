@@ -29,4 +29,4 @@ before_script:
     - psql -U postgres -d travis_ci_test -c "create extension postgis;"
     - python manage.py migrate --noinput
 script:
-    - python manage.py check
+    - python manage.py test
