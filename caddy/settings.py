@@ -87,29 +87,26 @@ TASTYPIE_DEFAULT_FORMATS = ['json', 'jsonp']
 
 
 # Logging settings
-# Ensure that the logs directory exists:
-if not os.path.exists(os.path.join(BASE_DIR, 'logs')):
-    os.mkdir(os.path.join(BASE_DIR, 'logs'))
 LOGGING = {
     'version': 1,
     'formatters': {
-        'verbose': {
-            'format': '%(levelname)s %(asctime)s %(message)s'
-        },
+        'console': {'format': '%(levelname)s %(message)s'},
     },
     'handlers': {
-        'file': {
+        'console': {
             'level': 'INFO',
-            'class': 'logging.handlers.RotatingFileHandler',
-            'filename': os.path.join(BASE_DIR, 'logs', 'caddy.log'),
-            'formatter': 'verbose',
-            'maxBytes': 1024 * 1024 * 5,
-            'backupCount': 5,
+            'class': 'logging.StreamHandler',
+            'formatter': 'console'
         },
     },
     'loggers': {
+        # Log to stdout/stderr by default.
+        'django': {
+            'handlers': ['console'],
+            'level': 'WARNING'
+        },
         'caddy': {
-            'handlers': ['file'],
+            'handlers': ['console'],
             'level': 'INFO'
         },
     }
