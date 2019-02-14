@@ -1,5 +1,6 @@
 from django.contrib.gis.db import models
 from django.contrib.postgres.fields import JSONField
+from django.template import Context, Template
 from django.utils.text import Truncator
 
 
@@ -13,8 +14,18 @@ class Address(models.Model):
     envelope = models.PolygonField(srid=4326, null=True, blank=True)
     data = JSONField(default=dict)
 
-    def __unicode__(self):
+    def __str__(self):
         if self.address_nice:
             return Truncator(self.address_nice).words(15)
         else:
             return Truncator(self.address_text).words(15)
+
+    def get_address_text(self):
+        # Render the address_text field value from a template.
+        f = """{{ object.address_nice }}
+{% if object.data.survey_lot %}{{ object.data.survey_lot }}{% endif %}
+{% if object.data.strata %}{{ object.data.strata }}{% endif %}
+{% if object.data.reserve %}{{ object.data.reserve }}{% endif %}"""
+        template = Template(f)
+        context = Context({'object': self})
+        return template.render(context).strip()

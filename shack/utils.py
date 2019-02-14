@@ -1,6 +1,5 @@
 from django.contrib.gis.geos import GEOSGeometry
 from django.db.migrations.operations.base import Operation
-from django.template import Context, Template
 import ujson
 import logging
 import os
@@ -47,8 +46,6 @@ def harvest_cadastre(limit=None):
         'maxFeatures': 1,
     }
     auth = (os.environ['GEOSERVER_USER'], os.environ['GEOSERVER_PASSWORD'])
-    f = open('shack/templates/shack/address_text.txt').read()
-    template = Template(f)
     # Initially query cadastre for the total feature count (maxfeatures=1)
     # Iterate over the total, 1000 features at a time.
     r = requests.get(url=GEOSERVER_URL, auth=auth, params=params)
@@ -115,9 +112,7 @@ def harvest_cadastre(limit=None):
                 if f in prop and prop[f]:
                     add.data[f] = prop[f]
             add.address_nice = address_nice.strip()
-            # Render the address_text field
-            context = Context({'object': add})
-            add.address_text = template.render(context).strip()
+            add.address_text = add.get_address_text()
             if update:  # Save changes to existing features.
                 add.save()
                 updates += 1
