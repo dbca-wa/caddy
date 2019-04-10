@@ -124,6 +124,90 @@ def harvest_cadastre(limit=None):
         logger.info('Created {} addresses, updated {}'.format(len(create_features), updates))
 
 
+def harvest_state_cadastre(limit=None):
+    """Refactor of harvest_cadastre to deal with new source schema.
+    """
+    GEOSERVER_URL = os.environ['GEOSERVER_URL']
+    params = {
+        'service': 'WFS',
+        'version': '1.1.0',
+        'request': 'GetFeature',
+        'typeName': os.environ['CADASTRE_LAYER'],
+        'outputFormat': 'application/json',
+        'sortBy': 'ogc_fid',
+        'maxFeatures': 1,
+    }
+    auth = (os.environ['GEOSERVER_USER'], os.environ['GEOSERVER_PASSWORD'])
+    # Initially query cadastre for the total feature count (maxfeatures=1)
+    # Iterate over the total, 1000 features at a time.
+    r = requests.get(url=GEOSERVER_URL, auth=auth, params=params)
+    total_features = r.json()['totalFeatures']
+    if limit and limit < total_features:  # Optional limit on total features imported.
+        total_features = limit
+    params['maxFeatures'] = 1000
+    if limit and limit < params['maxFeatures']:
+        params['maxFeatures'] = limit
+    for i in range(0, total_features, params['maxFeatures']):
+        logger.info('Querying features {} to {}'.format(i, i + params['maxFeatures']))
+        # Query the server for features, using startIndex.
+        params['startIndex'] = i
+        r = requests.get(url=GEOSERVER_URL, auth=auth, params=params)
+        j = r.json()
+        create_features = []
+        updates = 0
+        for f in j['features']:
+            #  Query for an existing feature (PIN == object_id)
+            if Address.objects.filter(object_id=f['properties']['cad_pin']).exists():
+                add = Address.objects.get(object_id=f['properties']['cad_pin'])
+                update = True  # Existing feature
+            else:
+                add = Address(object_id=f['properties']['cad_pin'])
+                update = False  # New feature
+            poly = GEOSGeometry(ujson.dumps(f['geometry']))
+            add.centroid = poly.centroid  # Precalculate the centroid.
+            add.envelope = poly.envelope  # Simplify the geometry bounds.
+            prop = f['properties']
+            address_nice = ''  # Human-readable "nice" address.
+            if 'cad_house_number' in prop and prop['cad_house_number']:
+                add.data['house_number'] = prop['cad_house_number']
+                address_nice += '{} '.format(prop['cad_house_number'])
+            if 'cad_road_name' in prop and prop['cad_road_name']:
+                add.data['road_name'] = prop['cad_road_name']
+                address_nice += '{} '.format(prop['cad_road_name'])
+                if 'cad_road_suffix' in prop and prop['cad_road_suffix']:
+                    add.data['road_suffix'] = prop['cad_road_suffix']
+                    # Try to match an existing suffix.
+                    if prop['cad_road_suffix'] in ROADS_ABBREV:
+                        address_nice += '{} '.format(ROADS_ABBREV[prop['cad_road_suffix']])
+                    else:
+                        address_nice += '{} '.format(prop['cad_road_suffix'])
+            if 'cad_locality' in prop and prop['cad_locality']:
+                add.data['locality'] = prop['cad_locality']
+                address_nice += '{} '.format(prop['cad_locality'])
+            if 'cad_postcode' in prop and prop['cad_postcode']:
+                add.data['postcode'] = prop['cad_postcode']
+                address_nice += '{} '.format(prop['cad_postcode'])
+            if 'cad_owner_name' in prop and prop['cad_owner_name']:
+                add.owner = prop['cad_owner_name']
+            if 'cad_lot_number' in prop and prop['cad_lot_number']:
+                add.lot_number = prop['cad_lot_number']
+            if 'cad_ownership' in prop and prop['cad_ownership']:
+                add.ownership = prop['cad_ownership']
+            if 'cad_pin' in prop and prop['cad_pin']:
+                add.pin = prop['cad_pin']
+            add.address_nice = address_nice.strip()
+            add.address_text = add.get_address_text()
+            if update:  # Save changes to existing features.
+                add.save()
+                updates += 1
+            else:
+                create_features.append(add)
+
+        # Do a bulk_create for each iteration (new features only).
+        Address.objects.bulk_create(create_features)
+        logger.info('Created {} addresses, updated {}'.format(len(create_features), updates))
+
+
 # Source: http://www.ipaustralia.gov.au/about-us/doing-business-with-us/address-standards/
 ROADS_ABBREV = {
     'ACCS': 'ACCESS',

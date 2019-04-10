@@ -10,6 +10,7 @@ class Address(models.Model):
     object_id = models.CharField(max_length=64, unique=True, db_index=True)
     address_text = models.TextField(help_text='Address document for search')
     address_nice = models.TextField(null=True, blank=True)
+    owner = models.TextField(null=True, blank=True)
     centroid = models.PointField(srid=4326)
     envelope = models.PolygonField(srid=4326, null=True, blank=True)
     data = JSONField(default=dict)
@@ -23,7 +24,8 @@ class Address(models.Model):
     def get_address_text(self):
         # Render the address_text field value from a template.
         f = """{{ object.address_nice }}
-{% if object.data.survey_lot %}{{ object.data.survey_lot }}{% endif %}
+{% if object.owner %}{{ object.owner }}{% endif %}
+{% if object.data.lot_number %}Lot {{ object.data.lot_number }}{% endif %}
 {% if object.data.strata %}{{ object.data.strata }}{% endif %}
 {% if object.data.reserve %}{{ object.data.reserve }}{% endif %}"""
         template = Template(f)

@@ -1,6 +1,6 @@
 from django.core.management.base import BaseCommand, CommandError
 import logging
-from shack.utils import harvest_cadastre
+from shack.utils import harvest_state_cadastre
 
 logger = logging.getLogger('caddy')
 
@@ -24,7 +24,7 @@ class Command(BaseCommand):
 
         self.stdout.write('Starting harvest of cadastre addresses')
         logger.info('Starting harvest of cadastre addresses')
-        harvest_cadastre(limit)
+        harvest_state_cadastre(limit)
         self.stdout.write('Finished harvest of cadastre addresses')
         logger.info('Finished harvest of cadastre addresses')
 
