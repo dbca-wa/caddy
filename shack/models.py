@@ -25,7 +25,6 @@ class Address(models.Model):
         # Render the address_text field value from a template.
         f = """{{ object.address_nice }}
 {% if object.owner %}{{ object.owner }}{% endif %}
-{% if object.data.lot_number %}Lot {{ object.data.lot_number }}{% endif %}
 {% if object.data.strata %}{{ object.data.strata }}{% endif %}
 {% if object.data.reserve %}{{ object.data.reserve }}{% endif %}"""
         template = Template(f)

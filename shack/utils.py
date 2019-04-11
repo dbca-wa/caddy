@@ -159,6 +159,7 @@ def harvest_state_cadastre(limit=None):
             #  Query for an existing feature (PIN == object_id)
             if Address.objects.filter(object_id=f['properties']['cad_pin']).exists():
                 add = Address.objects.get(object_id=f['properties']['cad_pin'])
+                add.data = {}
                 update = True  # Existing feature
             else:
                 add = Address(object_id=f['properties']['cad_pin'])
@@ -168,6 +169,9 @@ def harvest_state_cadastre(limit=None):
             add.envelope = poly.envelope  # Simplify the geometry bounds.
             prop = f['properties']
             address_nice = ''  # Human-readable "nice" address.
+            if 'cad_lot_number' in prop and prop['cad_lot_number']:
+                add.data['lot_number'] = prop['cad_lot_number']
+                address_nice += 'Lot {} '.format(prop['cad_lot_number'])
             if 'cad_house_number' in prop and prop['cad_house_number']:
                 add.data['house_number'] = prop['cad_house_number']
                 address_nice += '{} '.format(prop['cad_house_number'])
@@ -189,12 +193,10 @@ def harvest_state_cadastre(limit=None):
                 address_nice += '{} '.format(prop['cad_postcode'])
             if 'cad_owner_name' in prop and prop['cad_owner_name']:
                 add.owner = prop['cad_owner_name']
-            if 'cad_lot_number' in prop and prop['cad_lot_number']:
-                add.lot_number = prop['cad_lot_number']
             if 'cad_ownership' in prop and prop['cad_ownership']:
-                add.ownership = prop['cad_ownership']
+                add.data['ownership'] = prop['cad_ownership']
             if 'cad_pin' in prop and prop['cad_pin']:
-                add.pin = prop['cad_pin']
+                add.data['pin'] = prop['cad_pin']
             add.address_nice = address_nice.strip()
             add.address_text = add.get_address_text()
             if update:  # Save changes to existing features.
