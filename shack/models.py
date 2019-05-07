@@ -24,9 +24,7 @@ class Address(models.Model):
     def get_address_text(self):
         # Render the address_text field value from a template.
         f = """{{ object.address_nice }}
-{% if object.owner %}{{ object.owner }}{% endif %}
-{% if object.data.strata %}{{ object.data.strata }}{% endif %}
-{% if object.data.reserve %}{{ object.data.reserve }}{% endif %}"""
+{% if object.owner %}{{ object.owner }}{% endif %}"""
         template = Template(f)
         context = Context({'object': self})
         return template.render(context).strip()
