@@ -16,5 +16,7 @@ RUN pip install --no-cache-dir -r requirements.txt
 COPY geocoder.py gunicorn.ini manage.py ./
 COPY caddy ./caddy
 COPY shack ./shack
+# Run the application as the www-data user.
+USER www-data
 EXPOSE 8080
 CMD ["gunicorn", "caddy.wsgi", "--config", "gunicorn.ini"]
