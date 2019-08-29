@@ -2,6 +2,7 @@
 FROM python:3.7.2-slim-stretch as builder_base_caddy
 MAINTAINER asi@dbca.wa.gov.au
 RUN apt-get update -y \
+  && apt-get upgrade -y \
   && apt-get install -y wget gcc binutils libproj-dev gdal-bin \
   && rm -rf /var/lib/apt/lists/* \
   && pip install --upgrade pip
