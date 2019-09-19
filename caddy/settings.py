@@ -27,7 +27,6 @@ INTERNAL_IPS = ['127.0.0.1', '::1']
 ROOT_URLCONF = 'caddy.urls'
 WSGI_APPLICATION = 'caddy.wsgi.application'
 INSTALLED_APPS = (
-    'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
     'django.contrib.sessions',
