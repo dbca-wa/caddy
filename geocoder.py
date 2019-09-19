@@ -1,6 +1,6 @@
 #!/usr/bin/python
 from bottle import Bottle, route, static_file, request, response
-import confy
+from caddy.utils import env
 import os
 import ujson
 from sqlalchemy import create_engine
@@ -9,8 +9,9 @@ from sqlalchemy.orm import sessionmaker, scoped_session
 
 dot_env = os.path.join(os.getcwd(), '.env')
 if os.path.exists(dot_env):
-    confy.read_environment_file()
-database_url = confy.env('DATABASE_URL').replace('postgis', 'postgres')
+    from dotenv import read_dotenv
+    read_dotenv()
+database_url = env('DATABASE_URL').replace('postgis', 'postgres')
 engine = create_engine(database_url)
 Session = scoped_session(sessionmaker(bind=engine, autoflush=True))
 app = application = Bottle()
@@ -55,4 +56,4 @@ def geocode():
 
 if __name__ == '__main__':
     from bottle import run
-    run(application, host='0.0.0.0', port=confy.env('PORT', 8811))
+    run(application, host='0.0.0.0', port=env('PORT', 8811))

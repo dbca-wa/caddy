@@ -3,12 +3,12 @@ Django settings for caddy project.
 """
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
-from confy import env, database
+from caddy.utils import env
+import dj_database_url
 import os
 import sys
 
 # Project paths
-# Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 PROJECT_DIR = os.path.join(BASE_DIR, 'caddy')
 # Add PROJECT_DIR to the system path.
@@ -64,7 +64,7 @@ TEMPLATES = [
 # Database configuration
 DATABASES = {
     # Defined in the DATABASE_URL env variable.
-    'default': database.config(),
+    'default': dj_database_url.config(),
 }
 
 
