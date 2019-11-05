@@ -31,6 +31,24 @@ class LoadExtension(Operation):
         return "Creates extension {}".format(self.name)
 
 
+def geocode(query, limit=None):
+    """Convenience function to query Address objects for a text string and return a subset of the
+    queryset object values.
+    """
+    qs = Address.objects.filter(address_text__search=query)
+    resp = []
+    if limit:
+        qs = qs[0:limit]
+    for address in qs:
+        resp.append({
+            'address': address.address_nice,
+            'owner': address.owner,
+            'lon': address.centroid.x,
+            'lat': address.centroid.y
+        })
+    return resp
+
+
 def harvest_state_cadastre(limit=None):
     """Query the cadastre WFS for features. ``limit`` is optional integer of the
     maximum number of features to query.
