@@ -1,26 +1,27 @@
-sudo: true
+dist: xenial
+sudo: required
 language: python
 cache: pip
-dist: trusty
 python:
-    - 3.6
-addons:
-    postgresql: 9.6
-    apt:
-        packages:
-            - postgresql-9.6-postgis-2.3
+    - 3.7
 services:
     - postgresql
+    - docker
+addons:
+    postgresql: "10"
+    apt:
+        packages:
+            - postgresql-10-postgis-2.4
 branches:
     only:
         - master
 env:
     global:
-        - SECRET_KEY=SecretKeyForTravis
+        - SECRET_KEY="SecretKeyForTravisCI"
         - DATABASE_URL="postgis://postgres@localhost:5432/travis_ci_test"
+before_install:
+    - docker build -t dbcawa/caddy .
 install:
-    - sudo apt-get -qq update
-    - sudo apt-get install -y libev-dev
     - pip install --upgrade pip
     - pip install --upgrade setuptools
     - pip install -r requirements.txt
