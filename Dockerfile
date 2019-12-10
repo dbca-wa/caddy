@@ -1,9 +1,9 @@
 # Prepare the base environment.
-FROM python:3.7.2-slim-stretch as builder_base_caddy
+FROM python:3.7-slim-buster as builder_base_caddy
 MAINTAINER asi@dbca.wa.gov.au
 RUN apt-get update -y \
   && apt-get upgrade -y \
-  && apt-get install -y wget gcc binutils libproj-dev gdal-bin \
+  && apt-get install -y wget gcc binutils gdal-bin proj-bin \
   && rm -rf /var/lib/apt/lists/* \
   && pip install --upgrade pip
 
