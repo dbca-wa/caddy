@@ -60,7 +60,7 @@ def harvest_state_cadastre(limit=None):
         'request': 'GetFeature',
         'typeName': os.environ['CADASTRE_LAYER'],
         'outputFormat': 'application/json',
-        'sortBy': 'ogc_fid',
+        'sortBy': 'cad_pin',
         'maxFeatures': 1,
     }
     auth = (os.environ['GEOSERVER_USER'], os.environ['GEOSERVER_PASSWORD'])
