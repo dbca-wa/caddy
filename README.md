@@ -1,8 +1,8 @@
 # Caddy
 
 Caddy is a small application to harvest land parcel legal description
-fields, index address data and expose it as a searchable API
-for geocoding via minimal a Django application.
+fields and index address data via minimal a Django application, and
+expose it as a searchable API for geocoding.
 
 # Installation
 
