@@ -1,4 +1,4 @@
-from django.contrib.gis.geos import GEOSGeometry
+from django.contrib.gis.geos import GEOSGeometry, MultiPolygon, Point
 from django.db.migrations.operations.base import Operation
 import ujson
 import logging
@@ -81,6 +81,8 @@ def harvest_state_cadastre(limit=None):
         j = r.json()
         create_features = []
         updates = 0
+        suspect = 0
+        skipped = 0
         for f in j['features']:
             #  Query for an existing feature (PIN == object_id)
             if Address.objects.filter(object_id=f['properties']['cad_pin']).exists():
@@ -91,8 +93,23 @@ def harvest_state_cadastre(limit=None):
                 add = Address(object_id=f['properties']['cad_pin'])
                 update = False  # New feature
             poly = GEOSGeometry(ujson.dumps(f['geometry']))
+            # Edge case: sometimes features are returned as MultiPolygon.
+            # If the feature is a MP containing one polygon feature, use that.
+            # Otherwise, skip the feature entirely.
+            if isinstance(poly, MultiPolygon) and len(poly) == 1:
+                poly = poly[0]
+            elif isinstance(poly, MultiPolygon) and len(poly) > 1:
+                logger.warning('Skipping feature with PIN {} (multipolygon with >1 feature)'.format(f['properties']['cad_pin']))
+                skipped += 1
+                continue
             add.centroid = poly.centroid  # Precalculate the centroid.
-            add.envelope = poly.envelope  # Simplify the geometry bounds.
+            # Edge case: we've had some "zero area" geometries.
+            if isinstance(poly.envelope, Point):
+                logger.warning('Feature with PIN {} has area of 0 (geometry: {})'.format(f['properties']['cad_pin'], f['geometry']))
+                add.envelope = None
+                suspect += 1
+            else:
+                add.envelope = poly.envelope  # Simplify the geometry bounds.
             prop = f['properties']
             address_nice = ''  # Human-readable "nice" address.
             if 'cad_lot_number' in prop and prop['cad_lot_number']:
@@ -133,7 +150,8 @@ def harvest_state_cadastre(limit=None):
 
         # Do a bulk_create for each iteration (new features only).
         Address.objects.bulk_create(create_features)
-        logger.info('Created {} addresses, updated {}'.format(len(create_features), updates))
+        logger.info('Created {} addresses, updated {}, skipped {}, suspect {}'.format(
+            len(create_features), updates, skipped, suspect))
 
 
 # Source: http://www.ipaustralia.gov.au/about-us/doing-business-with-us/address-standards/
