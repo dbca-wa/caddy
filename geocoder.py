@@ -22,6 +22,28 @@ def index():
     return static_file('index.html', root='caddy/templates')
 
 
+@app.route('/api/<object_id>')
+def detail(object_id):
+    response.content_type = 'application/json'
+    response.headers['Access-Control-Allow-Origin'] = '*'
+    response.headers['Access-Control-Allow-Methods'] = 'GET, OPTIONS'
+    response.headers['Access-Control-Allow-Headers'] = 'Origin, Accept, Content-Type, X-Requested-With, X-CSRF-Token'
+    sql = "SELECT object_id, address_nice, owner, ST_AsText(centroid), ST_AsText(envelope), data FROM shack_address WHERE object_id = '{}'".format(object_id)
+    s = Session()
+    result = s.execute(sql).fetchone()
+    s.close()
+    if result:
+        return ujson.dumps({
+            'object_id': result[0],
+            'address': result[1],
+            'owner': result[2],
+            'centroid': result[3],
+            'envelope': result[4],
+            'data': result[5],
+        })
+    else:
+        return '{}'
+
 @app.route('/api/geocode')
 def geocode():
     response.content_type = 'application/json'
