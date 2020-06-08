@@ -8,3 +8,4 @@ logs/
 *.sw[o-p]
 *.sqlite3
 whoosh_index
+.python-version
