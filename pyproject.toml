@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "caddy"
-version = "2.1.6"
+version = "2.1.7"
 description = "Lightweight application service to harvest and index the cadastre dataset, and expose an API endpoint to allow full-text searching of addresses."
 authors = ["Ashley Felton <ashley.felton@dbca.wa.gov.au>"]
 license = "Apache License 2.0"
