@@ -1,14 +1,13 @@
 """
 Django settings for caddy project.
 """
-
-# Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 from caddy.utils import env
 import dj_database_url
 import os
 import sys
 
 # Project paths
+# Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 PROJECT_DIR = os.path.join(BASE_DIR, 'caddy')
 # Add PROJECT_DIR to the system path.
@@ -40,6 +39,7 @@ INSTALLED_APPS = (
     'tastypie',
     'corsheaders',
     'shack',
+    'cddp',
 )
 MIDDLEWARE = [
     'corsheaders.middleware.CorsMiddleware',
@@ -70,6 +70,9 @@ DATABASES = {
     # Defined in the DATABASE_URL env variable.
     'default': dj_database_url.config(),
 }
+if env('CDDP_DATABASE_URL', None):
+    DATABASES['cddp'] = dj_database_url.parse(env('CDDP_DATABASE_URL'))
+    DATABASE_ROUTERS = ['cddp.router.CddpDBRouter']
 
 
 # Internationalization
