@@ -1,4 +1,4 @@
-from django.contrib.gis.geos import GEOSGeometry, MultiPolygon, Point
+from django.contrib.gis.geos import GEOSGeometry, MultiPolygon, Polygon, Point
 from django.db.migrations.operations.base import Operation
 import ujson
 import logging
@@ -152,6 +152,86 @@ def harvest_state_cadastre(limit=None):
         Address.objects.bulk_create(create_features)
         logger.info('Created {} addresses, updated {}, skipped {}, suspect {}'.format(
             len(create_features), updates, skipped, suspect))
+
+
+def copy_cddp_cadastre(queryset):
+    """Copy Cadastre features from a database queryset.
+    """
+    created = 0
+    updates = 0
+    suspect = 0
+    skipped = 0
+
+    for f in queryset:
+        #  Query for an existing feature (PIN == object_id)
+        if Address.objects.filter(object_id=str(f.cad_pin)).exists():
+            add = Address.objects.get(object_id=str(f.cad_pin))
+            add.data = {}
+            update = True  # Existing feature
+        else:
+            add = Address(object_id=str(f.cad_pin))
+            update = False  # New feature
+
+        # Sometimes features are MultiPolygon, sometime Polygon.
+        # If the feature is a MP containing one polygon feature, use that.
+        # If >1, skip the feature.
+        if isinstance(f.shape, Polygon):
+            add.centroid = f.shape.centroid
+            add.envelope = f.shape.envelope
+        elif isinstance(f.shape, MultiPolygon) and len(f.shape) == 1:
+            add.centroid = f.shape[0].centroid
+            add.envelope = f.shape[0].envelope
+        elif isinstance(f.shape, MultiPolygon) and len(f.shape) > 1:
+            logger.warning('Skipping feature with PIN {} (multipolygon with >1 feature)'.format(f.cad_pin))
+            skipped += 1
+            continue
+
+        # Edge case: we sometimes have "zero area" geometries.
+        if isinstance(f.shape.envelope, Point):
+            logger.warning('Feature with PIN {} has zero area'.format(f.cad_pin))
+            add.envelope = None
+            suspect += 1
+
+        address_nice = ''  # Human-readable "nice" address.
+        if f.cad_lot_number:
+            add.data['lot_number'] = f.cad_lot_number
+            address_nice += '(Lot {}) '.format(f.cad_lot_number)
+        if f.cad_house_number:
+            add.data['house_number'] = f.cad_house_number
+            address_nice += '{} '.format(f.cad_house_number)
+        if f.cad_road_name:
+            add.data['road_name'] = f.cad_road_name
+            address_nice += '{} '.format(f.cad_road_name)
+            if f.cad_road_type:
+                add.data['road_type'] = f.cad_road_type
+                # Try to match an existing suffix.
+                if f.cad_road_type in ROADS_ABBREV:
+                    address_nice += '{} '.format(ROADS_ABBREV[f.cad_road_type])
+                else:
+                    address_nice += '{} '.format(f.cad_road_type)
+        if f.cad_locality:
+            add.data['locality'] = f.cad_locality
+            address_nice += '{} '.format(f.cad_locality)
+        if f.cad_postcode:
+            add.data['postcode'] = f.cad_postcode
+            address_nice += '{} '.format(f.cad_postcode)
+        if f.cad_owner_name:
+            add.owner = f.cad_owner_name
+        if f.cad_ownership:
+            add.data['ownership'] = f.cad_ownership
+        if f.cad_pin:
+            add.data['pin'] = f.cad_pin
+
+        add.address_nice = address_nice.strip()
+        add.address_text = add.get_address_text()
+        add.save()
+        if update:
+            updates += 1
+        else:
+            created += 1
+
+    logger.info('Created {} addresses, updated {}, skipped {}, suspect {}'.format(
+        created, updates, skipped, suspect))
 
 
 # Source: http://www.ipaustralia.gov.au/about-us/doing-business-with-us/address-standards/
