@@ -1,5 +1,5 @@
 # Prepare the base environment.
-FROM python:3.7-slim-buster as builder_base_caddy
+FROM python:3.8.6-slim-buster as builder_base_caddy
 MAINTAINER asi@dbca.wa.gov.au
 RUN apt-get update -y \
   && apt-get upgrade -y \
@@ -20,6 +20,7 @@ RUN poetry config virtualenvs.create false \
 # Install the project.
 COPY geocoder.py gunicorn.py manage.py ./
 COPY caddy ./caddy
+COPY cddp ./cddp
 COPY shack ./shack
 # Run the application as the www-data user.
 USER www-data
