@@ -5,7 +5,6 @@ python:
     - "3.9"
 services:
     - postgresql
-    - docker
 addons:
     postgresql: "12"
     apt:
@@ -20,7 +19,6 @@ env:
         - SECRET_KEY="SecretKeyForTravisCI"
         - DATABASE_URL="postgis://postgres@localhost:5432/travis_ci_test"
 before_install:
-    - docker build -t dbcawa/caddy .
     - pip install poetry
 install:
     - poetry install --no-dev --no-interaction --no-ansi
