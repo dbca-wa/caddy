@@ -1,13 +1,11 @@
 from django.contrib.gis.geos import GEOSGeometry, MultiPolygon, Polygon, Point
 from django.db.migrations.operations.base import Operation
 import ujson
-import logging
 import os
 import requests
 
+from cddp.models import CptCadastreScdb
 from .models import Address
-
-logger = logging.getLogger('caddy')
 
 
 class LoadExtension(Operation):
@@ -74,7 +72,7 @@ def harvest_state_cadastre(limit=None):
     if limit and limit < params['maxFeatures']:
         params['maxFeatures'] = limit
     for i in range(0, total_features, params['maxFeatures']):
-        logger.info('Querying features {} to {}'.format(i, i + params['maxFeatures']))
+        print('Querying features {} to {}'.format(i, i + params['maxFeatures']))
         # Query the server for features, using startIndex.
         params['startIndex'] = i
         r = requests.get(url=GEOSERVER_URL, auth=auth, params=params)
@@ -99,13 +97,13 @@ def harvest_state_cadastre(limit=None):
             if isinstance(poly, MultiPolygon) and len(poly) == 1:
                 poly = poly[0]
             elif isinstance(poly, MultiPolygon) and len(poly) > 1:
-                logger.warning('Skipping feature with PIN {} (multipolygon with >1 feature)'.format(f['properties']['cad_pin']))
+                print('Skipping feature with PIN {} (multipolygon with >1 feature)'.format(f['properties']['cad_pin']))
                 skipped += 1
                 continue
             add.centroid = poly.centroid  # Precalculate the centroid.
             # Edge case: we've had some "zero area" geometries.
             if isinstance(poly.envelope, Point):
-                logger.warning('Feature with PIN {} has area of 0 (geometry: {})'.format(f['properties']['cad_pin'], f['geometry']))
+                print('Feature with PIN {} has area of 0 (geometry: {})'.format(f['properties']['cad_pin'], f['geometry']))
                 add.envelope = None
                 suspect += 1
             else:
@@ -150,8 +148,20 @@ def harvest_state_cadastre(limit=None):
 
         # Do a bulk_create for each iteration (new features only).
         Address.objects.bulk_create(create_features)
-        logger.info('Created {} addresses, updated {}, skipped {}, suspect {}'.format(
+        print('Created {} addresses, updated {}, skipped {}, suspect {}'.format(
             len(create_features), updates, skipped, suspect))
+
+
+def prune_addresses():
+    """Delete any Addresses having an object_id value that doesn't match any current Cadastre object PIN.
+    """
+    addresses = set([int(i) for i in Address.objects.all().values_list('object_id', flat=True)])
+    cadastres = set(CptCadastreScdb.objects.all().values_list('cad_pin', flat=True))
+    to_delete = addresses - cadastres
+
+    print('Deleting {} Address objects not matching any current Cadastre object PIN'. format(len(to_delete)))
+    addresses = Address.objects.filter(object_id__in=to_delete)
+    addresses.delete()
 
 
 def copy_cddp_cadastre(queryset):
@@ -182,13 +192,13 @@ def copy_cddp_cadastre(queryset):
             add.centroid = f.shape[0].centroid
             add.envelope = f.shape[0].envelope
         elif isinstance(f.shape, MultiPolygon) and len(f.shape) > 1:
-            logger.warning('Skipping feature with PIN {} (multipolygon with >1 feature)'.format(f.cad_pin))
+            print('Skipping feature with PIN {} (multipolygon with >1 feature)'.format(f.cad_pin))
             skipped += 1
             continue
 
         # Edge case: we sometimes have "zero area" geometries.
         if isinstance(f.shape.envelope, Point):
-            logger.warning('Feature with PIN {} has zero area'.format(f.cad_pin))
+            print('Feature with PIN {} has zero area'.format(f.cad_pin))
             add.envelope = None
             suspect += 1
 
@@ -230,7 +240,7 @@ def copy_cddp_cadastre(queryset):
         else:
             created += 1
 
-    logger.info('Created {} addresses, updated {}, skipped {}, suspect {}'.format(
+    print('Created {} addresses, updated {}, skipped {}, suspect {}'.format(
         created, updates, skipped, suspect))
 
 

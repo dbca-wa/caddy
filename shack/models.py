@@ -1,5 +1,4 @@
 from django.contrib.gis.db import models
-from django.contrib.postgres.fields import JSONField
 from django.template import Context, Template
 from django.utils.text import Truncator
 
@@ -13,7 +12,7 @@ class Address(models.Model):
     owner = models.TextField(null=True, blank=True)
     centroid = models.PointField(srid=4326)
     envelope = models.PolygonField(srid=4326, null=True, blank=True)
-    data = JSONField(default=dict)
+    data = models.JSONField(default=dict)
 
     def __str__(self):
         if self.address_nice:
