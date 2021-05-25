@@ -11,7 +11,7 @@ dot_env = os.path.join(os.getcwd(), '.env')
 if os.path.exists(dot_env):
     from dotenv import read_dotenv
     read_dotenv()
-database_url = env('DATABASE_URL').replace('postgis', 'postgres')
+database_url = env('DATABASE_URL').replace('postgis', 'postgresql')
 engine = create_engine(database_url)
 Session = scoped_session(sessionmaker(bind=engine, autoflush=True))
 app = application = Bottle()

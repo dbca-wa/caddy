@@ -15,6 +15,7 @@ sys.path.insert(0, PROJECT_DIR)
 
 # Application definition
 DEBUG = env('DEBUG', False)
+DEFAULT_AUTO_FIELD = 'django.db.models.AutoField'
 SECRET_KEY = env('SECRET_KEY', 'PlaceholderSecretKey')
 CSRF_COOKIE_SECURE = env('CSRF_COOKIE_SECURE', False)
 SESSION_COOKIE_SECURE = env('SESSION_COOKIE_SECURE', False)
@@ -78,7 +79,7 @@ if env('CDDP_DATABASE_URL', None):
 # Internationalization
 LANGUAGE_CODE = 'en-us'
 TIME_ZONE = 'Australia/Perth'
-USE_I18N = True
+USE_I18N = False
 USE_L10N = True
 USE_TZ = True
 
