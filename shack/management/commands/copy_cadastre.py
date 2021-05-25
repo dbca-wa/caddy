@@ -1,6 +1,7 @@
 from django.core.management.base import BaseCommand, CommandError
-from shack.utils import copy_cddp_cadastre
+
 from cddp.models import CptCadastreScdb
+from shack.utils import copy_cddp_cadastre, prune_addresses
 
 
 class Command(BaseCommand):
@@ -26,3 +27,4 @@ class Command(BaseCommand):
         self.stdout.write('Starting copy of {} cadastre addresses'.format(qs.count()))
         copy_cddp_cadastre(qs)
         self.stdout.write('Finished copy of cadastre addresses')
+        prune_addresses()
