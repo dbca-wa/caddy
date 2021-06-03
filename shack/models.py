@@ -6,7 +6,7 @@ from django.utils.text import Truncator
 class Address(models.Model):
     """An address indexed and searchable via PostgreSQL.
     """
-    object_id = models.CharField(max_length=64, unique=True, db_index=True)
+    object_id = models.CharField(max_length=64, unique=True, db_index=True)  # Equivalent to cadastre PIN.
     address_text = models.TextField(help_text='Address document for search')
     address_nice = models.TextField(null=True, blank=True)
     owner = models.TextField(null=True, blank=True)

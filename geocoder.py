@@ -58,7 +58,7 @@ def geocode():
     words = q.split()
     words = ' & '.join(words)
     # Partial address searching
-    sql = "SELECT address_nice, owner, ST_X(centroid), ST_Y(centroid) FROM shack_address WHERE tsv @@ to_tsquery('{}')".format(words)
+    sql = "SELECT address_nice, owner, ST_X(centroid), ST_Y(centroid), object_id FROM shack_address WHERE tsv @@ to_tsquery('{}')".format(words)
     s = Session()
     result = s.execute(sql).fetchmany(int(limit))
     s.close()
@@ -69,7 +69,8 @@ def geocode():
                 'address': i[0],
                 'owner': i[1],
                 'lon': i[2],
-                'lat': i[3]
+                'lat': i[3],
+                'pin': i[4],
             })
         return ujson.dumps(j)
     else:
