@@ -1,5 +1,5 @@
 #!/usr/bin/python
-from bottle import Bottle, route, static_file, request, response
+from bottle import Bottle, static_file, request, response
 from caddy.utils import env
 import os
 import ujson
@@ -43,6 +43,7 @@ def detail(object_id):
         })
     else:
         return '{}'
+
 
 @app.route('/api/geocode')
 def geocode():
