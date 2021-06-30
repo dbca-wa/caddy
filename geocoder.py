@@ -1,5 +1,5 @@
 #!/usr/bin/python
-from bottle import Bottle, route, static_file, request, response
+from bottle import Bottle, static_file, request, response
 from caddy.utils import env
 import os
 import ujson
@@ -44,6 +44,7 @@ def detail(object_id):
     else:
         return '{}'
 
+
 @app.route('/api/geocode')
 def geocode():
     response.content_type = 'application/json'
@@ -58,18 +59,19 @@ def geocode():
     words = q.split()
     words = ' & '.join(words)
     # Partial address searching
-    sql = "SELECT address_nice, owner, ST_X(centroid), ST_Y(centroid) FROM shack_address WHERE tsv @@ to_tsquery('{}')".format(words)
+    sql = "SELECT address_nice, owner, ST_X(centroid), ST_Y(centroid), object_id FROM shack_address WHERE tsv @@ to_tsquery('{}')".format(words)
     s = Session()
     result = s.execute(sql).fetchmany(int(limit))
     s.close()
-    j = []
     if result:
+        j = []
         for i in result:
             j.append({
                 'address': i[0],
                 'owner': i[1],
                 'lon': i[2],
-                'lat': i[3]
+                'lat': i[3],
+                'pin': i[4],
             })
         return ujson.dumps(j)
     else:
