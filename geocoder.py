@@ -63,8 +63,8 @@ def geocode():
     s = Session()
     result = s.execute(sql).fetchmany(int(limit))
     s.close()
-    j = []
     if result:
+        j = []
         for i in result:
             j.append({
                 'address': i[0],
