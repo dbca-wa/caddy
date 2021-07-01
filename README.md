@@ -6,17 +6,24 @@ expose it as a searchable API for geocoding.
 
 # Installation
 
-* Clone the repository.
-* Create a virtualenv and install requirements: `pip install -r
-  requirements.txt`
-* Define environment settings in `.env`.
-* Create a database and run: `python manage.py migrate`
-* Run the management command to harvest data: `python manage.py harvest_cadastre`
+The recommended way to set up this project for development is using
+[Poetry](https://python-poetry.org/docs/) to install and manage a virtual Python
+environment. With Poetry installed, change into the project directory and run:
+
+    poetry install
+
+To run Python commands in the virtualenv, thereafter run them like so:
+
+    poetry run python manage.py
+
+Manage new or updating project dependencies with Poetry also, like so:
+
+    poetry add newpackage==1.0
 
 # Environment settings
 
-This project uses **django-confy** to set environment variables (in a `.env` file).
-The following variables are required for the project to run:
+This project uses environment variables (in a `.env` file) to define application settings.
+Required settings are as follows:
 
     DATABASE_URL="postgres://USER:PASSWORD@HOST:PORT/NAME"
     SECRET_KEY="ThisIsASecretKey"
@@ -27,24 +34,22 @@ Optional variables below may also need to be defined (context-dependent):
     GEOSERVER_USER="username"
     GEOSERVER_PASSWORD="password"
     CADASTRE_LAYER="workspace:layer"
+    CDDP_DATABASE_URL="postgres://USER:PASSWORD@HOST:PORT/NAME"
 
 *NOTE*: the `GEOSERVER_*` settings are to a WFS service endpoint. The
 `CADASTRE_LAYER` is the WFS layer (**workspace:layer**).
 
+The `CDDP_DATABASE_URL` setting is required to run the management command used
+to directly copy the Cadastre data from a database source.
+
 # Usage
 
-Run the frontend application with `python geocoder.py` (the default port
+Run the frontend application with `poetry run python geocoder.py` (the default port
 is 8081, which can be overridden by defining a `PORT` environment variable.
 
-Run the Django application using the  `runserver` management command. Visit
-the API url and provide a query parameter `q` to search, e.g.:
+Run Django console commands manually:
 
-    http://HOST/api/v1/address/geocode/?q=perth+wa&limit=5
-
-Other API endpoints:
-
-    http://HOST/api/v1/address/
-    http://HOST/api/v1/address/schema/
+    poetry run python manage.py shell_plus
 
 # Background
 
