@@ -2,6 +2,7 @@ from django.contrib.gis.geos import GEOSGeometry, MultiPolygon, Polygon, Point
 from django.db.migrations.operations.base import Operation
 import ujson
 import os
+import re
 import requests
 
 from cddp.models import CptCadastreScdb
@@ -171,6 +172,7 @@ def copy_cddp_cadastre(queryset):
     updates = 0
     suspect = 0
     skipped = 0
+    reserve_pattern = re.compile('(?P<reserve>[0-9]+)$')
 
     for f in queryset:
         #  Query for an existing feature (PIN == object_id)
@@ -224,13 +226,19 @@ def copy_cddp_cadastre(queryset):
             address_nice += '{} '.format(f.cad_locality)
         if f.cad_postcode:
             add.data['postcode'] = f.cad_postcode
-            address_nice += '{} '.format(f.cad_postcode)
+            address_nice += '{} '.format(int(f.cad_postcode))
         if f.cad_owner_name:
             add.owner = f.cad_owner_name
         if f.cad_ownership:
             add.data['ownership'] = f.cad_ownership
         if f.cad_pin:
             add.data['pin'] = f.cad_pin
+        # Reserves
+        if f.cad_pitype_3_1 and f.cad_pitype_3_1.startswith('R'):
+            match = re.search(reserve_pattern, f.cad_pitype_3_1)
+            if match:
+                add.data['reserve'] = match.group()
+                address_nice = 'Reserve {} '.format(match.group()) + address_nice
 
         add.address_nice = address_nice.strip()
         add.address_text = add.get_address_text()
