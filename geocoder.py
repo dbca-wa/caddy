@@ -22,6 +22,21 @@ def index():
     return static_file('index.html', root='caddy/templates')
 
 
+@app.route('/liveness')
+def index():
+    return 'OK'
+
+
+@app.route('/readiness')
+def index():
+    sql = 'SELECT 1'
+    s = Session()
+    result = s.execute(sql).fetchone()
+    s.close()
+    if result:
+        return 'OK'
+
+
 @app.route('/api/<object_id>')
 def detail(object_id):
     response.content_type = 'application/json'

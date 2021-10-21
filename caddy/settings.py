@@ -97,23 +97,29 @@ TASTYPIE_DEFAULT_FORMATS = ['json', 'jsonp']
 LOGGING = {
     'version': 1,
     'formatters': {
-        'console': {'format': '%(levelname)s %(message)s'},
+        'verbose': {'format': '%(asctime)s %(levelname)-12s %(name)-12s %(message)s'},
     },
     'handlers': {
         'console': {
-            'level': 'INFO',
             'class': 'logging.StreamHandler',
-            'formatter': 'console'
+            'formatter': 'verbose',
+            'stream': sys.stdout,
+            'level': 'WARNING',
+        },
+        'caddy': {
+            'class': 'logging.StreamHandler',
+            'formatter': 'verbose',
+            'stream': sys.stdout,
+            'level': 'INFO',
         },
     },
     'loggers': {
-        # Log to stdout/stderr by default.
-        'django': {
+        '': {
             'handlers': ['console'],
-            'level': 'WARNING'
+            'level': 'WARNING',
         },
         'caddy': {
-            'handlers': ['console'],
+            'handlers': ['caddy'],
             'level': 'INFO'
         },
     }
