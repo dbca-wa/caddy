@@ -38,12 +38,10 @@ INSTALLED_APPS = (
     'django.contrib.postgres',
     'django_extensions',
     'tastypie',
-    'corsheaders',
     'shack',
     'cddp',
 )
 MIDDLEWARE = [
-    'corsheaders.middleware.CorsMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
@@ -124,7 +122,3 @@ LOGGING = {
         },
     }
 }
-
-# django-cors-headers settings
-CORS_ORIGIN_ALLOW_ALL = True
-CORS_ALLOW_METHODS = ('GET',)
