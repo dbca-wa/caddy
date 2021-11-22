@@ -24,7 +24,8 @@ def index():
 
 @app.route('/liveness')
 def index():
-    return 'OK'
+    response.content_type = 'application/json'
+    return '{"liveness": "OK"}'
 
 
 @app.route('/readiness')
@@ -34,15 +35,13 @@ def index():
     result = s.execute(sql).fetchone()
     s.close()
     if result:
-        return 'OK'
+        response.content_type = 'application/json'
+        return '{"readiness": "OK"}'
 
 
 @app.route('/api/<object_id>')
 def detail(object_id):
     response.content_type = 'application/json'
-    response.headers['Access-Control-Allow-Origin'] = '*'
-    response.headers['Access-Control-Allow-Methods'] = 'GET, OPTIONS'
-    response.headers['Access-Control-Allow-Headers'] = 'Origin, Accept, Content-Type, X-Requested-With, X-CSRF-Token'
     sql = "SELECT object_id, address_nice, owner, ST_AsText(centroid), ST_AsText(envelope), data FROM shack_address WHERE object_id = '{}'".format(object_id)
     s = Session()
     result = s.execute(sql).fetchone()
@@ -63,10 +62,6 @@ def detail(object_id):
 @app.route('/api/geocode')
 def geocode():
     response.content_type = 'application/json'
-    # Allow cross-origin GET requests.
-    response.headers['Access-Control-Allow-Origin'] = '*'
-    response.headers['Access-Control-Allow-Methods'] = 'GET, OPTIONS'
-    response.headers['Access-Control-Allow-Headers'] = 'Origin, Accept, Content-Type, X-Requested-With, X-CSRF-Token'
     q = request.query.q or ''
     if not q:
         return '[]'

@@ -12,7 +12,7 @@ RUN apt-get update -y \
 # Install Python libs using poetry.
 FROM builder_base as python_libs
 WORKDIR /app
-ENV POETRY_VERSION=1.1.6
+ENV POETRY_VERSION=1.1.11
 RUN pip install "poetry==$POETRY_VERSION"
 RUN python -m venv /venv
 COPY poetry.lock pyproject.toml /app/

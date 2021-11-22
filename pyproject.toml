@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "caddy"
-version = "2.2.2"
+version = "2.2.3"
 description = "Lightweight application service to harvest and index the cadastre dataset, and expose an API endpoint to allow full-text searching of addresses."
 authors = ["Ashley Felton <ashley.felton@dbca.wa.gov.au>"]
 license = "Apache License 2.0"
@@ -15,7 +15,6 @@ SQLAlchemy = "1.4.26"
 django-extensions = "3.0.8"
 requests = "2.26.0"
 django-tastypie = "0.14.3"
-django-cors-headers = "3.1.0"
 ujson = "4.2.0"
 bottle = "0.12.19"
 gunicorn = "20.1.0"
@@ -27,5 +26,5 @@ ipython = "^7.23.0"
 ipdb = "^0.13.9"
 
 [build-system]
-requires = ["poetry>=1.1.6"]
+requires = ["poetry>=1.1.11"]
 build-backend = "poetry.masonry.api"
