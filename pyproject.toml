@@ -26,5 +26,5 @@ ipython = "^7.23.0"
 ipdb = "^0.13.9"
 
 [build-system]
-requires = ["poetry>=1.1.6"]
+requires = ["poetry>=1.1.11"]
 build-backend = "poetry.masonry.api"
