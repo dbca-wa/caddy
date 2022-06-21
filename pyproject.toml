@@ -19,7 +19,7 @@ ujson = "5.2.0"
 bottle = "0.12.19"
 gunicorn = "20.1.0"
 mixer = "^6.1.3"
-WebTest = "^2.0.35"
+WebTest = "3.0.0"
 
 [tool.poetry.dev-dependencies]
 ipython = "^7.31.1"
