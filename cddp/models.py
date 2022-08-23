@@ -39,7 +39,6 @@ class CptCadastreScdb(models.Model):
     cad_ownership = models.CharField(max_length=8, blank=True, null=True)
     cad_legend = models.CharField(max_length=50, blank=True, null=True)
     cad_unit_number = models.CharField(max_length=50, blank=True, null=True)
-    globalid = models.CharField(max_length=38, blank=True, null=True)
     shape_length = models.FloatField(blank=True, null=True)
     shape_area = models.FloatField(blank=True, null=True)
     shape = models.MultiPolygonField(srid=4283, blank=True, null=True)
