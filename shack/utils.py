@@ -1,5 +1,7 @@
+from django.core.paginator import Paginator
 from django.contrib.gis.geos import GEOSGeometry, MultiPolygon, Polygon, Point
 from django.db.migrations.operations.base import Operation
+from django.db.models import Subquery
 import ujson
 import os
 import re
@@ -173,83 +175,86 @@ def copy_cddp_cadastre(queryset):
     suspect = 0
     skipped = 0
     reserve_pattern = re.compile('(?P<reserve>[0-9]+)$')
+    paginator = Paginator(queryset, 10000)
 
-    for f in queryset:
-        #  Query for an existing feature (PIN == object_id)
-        if Address.objects.filter(object_id=str(f.cad_pin)).exists():
-            add = Address.objects.get(object_id=str(f.cad_pin))
-            add.data = {}
-            update = True  # Existing feature
-        else:
-            add = Address(object_id=str(f.cad_pin))
-            update = False  # New feature
+    for page_num in paginator.page_range:
+        subquery = CptCadastreScdb.objects.filter(objectid__in=Subquery(paginator.page(page_num).object_list.values('objectid')))
+        print(f'Importing {subquery.count()} cadastre addresses')
+        for f in subquery:
+            #  Query for an existing feature (PIN == object_id)
+            if Address.objects.filter(object_id=str(f.cad_pin)).exists():
+                add = Address.objects.get(object_id=str(f.cad_pin))
+                add.data = {}
+                update = True  # Existing feature
+            else:
+                add = Address(object_id=str(f.cad_pin))
+                update = False  # New feature
 
-        # Sometimes features are MultiPolygon, sometime Polygon.
-        # If the feature is a MP containing one polygon feature, use that.
-        # If >1, skip the feature.
-        if isinstance(f.shape, Polygon):
-            add.centroid = f.shape.centroid
-            add.envelope = f.shape.envelope
-        elif isinstance(f.shape, MultiPolygon) and len(f.shape) == 1:
-            add.centroid = f.shape[0].centroid
-            add.envelope = f.shape[0].envelope
-        elif isinstance(f.shape, MultiPolygon) and len(f.shape) > 1:
-            print('Skipping feature with PIN {} (multipolygon with >1 feature)'.format(f.cad_pin))
-            skipped += 1
-            continue
+            # Sometimes features are MultiPolygon, sometime Polygon.
+            # If the feature is a MP containing one polygon feature, use that.
+            # If >1, skip the feature.
+            if isinstance(f.shape, Polygon):
+                add.centroid = f.shape.centroid
+                add.envelope = f.shape.envelope
+            elif isinstance(f.shape, MultiPolygon) and len(f.shape) == 1:
+                add.centroid = f.shape[0].centroid
+                add.envelope = f.shape[0].envelope
+            elif isinstance(f.shape, MultiPolygon) and len(f.shape) > 1:
+                print(f'Skipping feature with PIN {f.cad_pin} (multipolygon with >1 feature)')
+                skipped += 1
+                continue
 
-        # Edge case: we sometimes have "zero area" geometries.
-        if isinstance(f.shape.envelope, Point):
-            print('Feature with PIN {} has zero area'.format(f.cad_pin))
-            add.envelope = None
-            suspect += 1
+            # Edge case: we sometimes have "zero area" geometries.
+            if isinstance(f.shape.envelope, Point):
+                print(f'Feature with PIN {f.cad_pin} has zero area')
+                add.envelope = None
+                suspect += 1
 
-        address_nice = ''  # Human-readable "nice" address.
-        if f.cad_lot_number:
-            add.data['lot_number'] = f.cad_lot_number
-            address_nice += '(Lot {}) '.format(f.cad_lot_number)
-        if f.cad_house_number:
-            add.data['house_number'] = f.cad_house_number
-            address_nice += '{} '.format(f.cad_house_number)
-        if f.cad_road_name:
-            add.data['road_name'] = f.cad_road_name
-            address_nice += '{} '.format(f.cad_road_name)
-            if f.cad_road_type:
-                add.data['road_type'] = f.cad_road_type
-                # Try to match an existing suffix.
-                if f.cad_road_type in ROADS_ABBREV:
-                    address_nice += '{} '.format(ROADS_ABBREV[f.cad_road_type])
-                else:
-                    address_nice += '{} '.format(f.cad_road_type)
-        if f.cad_locality:
-            add.data['locality'] = f.cad_locality
-            address_nice += '{} '.format(f.cad_locality)
-        if f.cad_postcode:
-            add.data['postcode'] = f.cad_postcode
-            address_nice += '{} '.format(int(f.cad_postcode))
-        if f.cad_owner_name:
-            add.owner = f.cad_owner_name
-        if f.cad_ownership:
-            add.data['ownership'] = f.cad_ownership
-        if f.cad_pin:
-            add.data['pin'] = f.cad_pin
-        # Reserves
-        if f.cad_pitype_3_1 and f.cad_pitype_3_1.startswith('R'):
-            match = re.search(reserve_pattern, f.cad_pitype_3_1)
-            if match:
-                add.data['reserve'] = match.group()
-                address_nice = 'Reserve {} '.format(match.group()) + address_nice
+            address_nice = ''  # Human-readable "nice" address.
+            if f.cad_lot_number:
+                add.data['lot_number'] = f.cad_lot_number
+                address_nice += '(Lot {}) '.format(f.cad_lot_number)
+            if f.cad_house_number:
+                add.data['house_number'] = f.cad_house_number
+                address_nice += '{} '.format(f.cad_house_number)
+            if f.cad_road_name:
+                add.data['road_name'] = f.cad_road_name
+                address_nice += '{} '.format(f.cad_road_name)
+                if f.cad_road_type:
+                    add.data['road_type'] = f.cad_road_type
+                    # Try to match an existing suffix.
+                    if f.cad_road_type in ROADS_ABBREV:
+                        address_nice += '{} '.format(ROADS_ABBREV[f.cad_road_type])
+                    else:
+                        address_nice += '{} '.format(f.cad_road_type)
+            if f.cad_locality:
+                add.data['locality'] = f.cad_locality
+                address_nice += '{} '.format(f.cad_locality)
+            if f.cad_postcode:
+                add.data['postcode'] = f.cad_postcode
+                address_nice += '{} '.format(int(f.cad_postcode))
+            if f.cad_owner_name:
+                add.owner = f.cad_owner_name
+            if f.cad_ownership:
+                add.data['ownership'] = f.cad_ownership
+            if f.cad_pin:
+                add.data['pin'] = f.cad_pin
+            # Reserves
+            if f.cad_pitype_3_1 and f.cad_pitype_3_1.startswith('R'):
+                match = re.search(reserve_pattern, f.cad_pitype_3_1)
+                if match:
+                    add.data['reserve'] = match.group()
+                    address_nice = 'Reserve {} '.format(match.group()) + address_nice
 
-        add.address_nice = address_nice.strip()
-        add.address_text = add.get_address_text()
-        add.save()
-        if update:
-            updates += 1
-        else:
-            created += 1
+            add.address_nice = address_nice.strip()
+            add.address_text = add.get_address_text()
+            add.save()
+            if update:
+                updates += 1
+            else:
+                created += 1
 
-    print('Created {} addresses, updated {}, skipped {}, suspect {}'.format(
-        created, updates, skipped, suspect))
+    print(f'Created {created} addresses, updated {updates}, skipped {skipped}, suspect {suspect}')
 
 
 # Source: http://www.ipaustralia.gov.au/about-us/doing-business-with-us/address-standards/
