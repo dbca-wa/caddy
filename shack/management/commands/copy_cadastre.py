@@ -1,4 +1,5 @@
 from django.core.management.base import BaseCommand, CommandError
+import logging
 
 from cddp.models import CptCadastreScdb
 from shack.utils import copy_cddp_cadastre, prune_addresses
@@ -13,6 +14,7 @@ class Command(BaseCommand):
             help='Limit of the number of results to query/import')
 
     def handle(self, *args, **options):
+        logger = logging.getLogger('caddy')
         if options['limit']:
             try:
                 limit = int(options['limit'])
@@ -24,7 +26,7 @@ class Command(BaseCommand):
         qs = CptCadastreScdb.objects.all()
         if limit:
             qs = qs[0:limit]
-        self.stdout.write('Starting copy of {} cadastre addresses'.format(qs.count()))
+        logger.info('Starting copy of {} cadastre addresses'.format(qs.count()))
         copy_cddp_cadastre(qs)
-        self.stdout.write('Finished copy of cadastre addresses')
+        logger.info('Finished copy of cadastre addresses')
         prune_addresses()
