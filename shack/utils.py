@@ -259,6 +259,9 @@ def copy_cddp_cadastre(queryset):
             else:
                 created += 1
 
+        # Running total:
+        LOGGER.info(f'Processed {created + updates + skipped + suspect} addresses')
+
     LOGGER.info(f'Created {created} addresses, updated {updates}, skipped {skipped}, suspect {suspect}')
 
 
