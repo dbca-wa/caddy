@@ -239,7 +239,7 @@ def copy_cddp_cadastre(queryset):
                 add.data['postcode'] = f.cad_postcode
                 address_nice += '{} '.format(int(f.cad_postcode))
             if f.cad_owner_name:
-                add.owner = f.cad_owner_name
+                add.owner = f.cad_owner_name.strip()
             if f.cad_ownership:
                 add.data['ownership'] = f.cad_ownership
             if f.cad_pin:
