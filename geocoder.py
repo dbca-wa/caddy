@@ -42,7 +42,7 @@ def index():
 @app.route('/api/<object_id>')
 def detail(object_id):
     response.content_type = 'application/json'
-    sql = "SELECT object_id, address_nice, owner, ST_AsText(centroid), ST_AsText(envelope), data FROM shack_address WHERE object_id = '{}'".format(object_id)
+    sql = "SELECT object_id, address_nice, owner, ST_AsText(centroid), ST_AsText(envelope), ST_AsText(boundary), data FROM shack_address WHERE object_id = '{}'".format(object_id)
     s = Session()
     result = s.execute(sql).fetchone()
     s.close()
@@ -53,7 +53,8 @@ def detail(object_id):
             'owner': result[2],
             'centroid': result[3],
             'envelope': result[4],
-            'data': result[5],
+            'boundary': result[5],
+            'data': result[6],
         })
     else:
         return '{}'
