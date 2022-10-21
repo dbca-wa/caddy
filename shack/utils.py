@@ -198,9 +198,11 @@ def copy_cddp_cadastre(queryset):
             if isinstance(f.shape, Polygon):
                 add.centroid = f.shape.centroid
                 add.envelope = f.shape.envelope
+                add.boundary = f.shape
             elif isinstance(f.shape, MultiPolygon) and len(f.shape) == 1:
                 add.centroid = f.shape[0].centroid
                 add.envelope = f.shape[0].envelope
+                add.boundary = f.shape[0]
             elif isinstance(f.shape, MultiPolygon) and len(f.shape) > 1:
                 LOGGER.info(f'Skipping feature with PIN {f.cad_pin} (multipolygon with >1 feature)')
                 skipped += 1
@@ -210,6 +212,7 @@ def copy_cddp_cadastre(queryset):
             if isinstance(f.shape.envelope, Point):
                 LOGGER.info(f'Feature with PIN {f.cad_pin} has zero area')
                 add.envelope = None
+                add.boundary = None
                 suspect += 1
 
             address_nice = ''  # Human-readable "nice" address.
@@ -236,7 +239,7 @@ def copy_cddp_cadastre(queryset):
                 add.data['postcode'] = f.cad_postcode
                 address_nice += '{} '.format(int(f.cad_postcode))
             if f.cad_owner_name:
-                add.owner = f.cad_owner_name
+                add.owner = f.cad_owner_name.strip()
             if f.cad_ownership:
                 add.data['ownership'] = f.cad_ownership
             if f.cad_pin:
@@ -255,6 +258,9 @@ def copy_cddp_cadastre(queryset):
                 updates += 1
             else:
                 created += 1
+
+        # Running total:
+        LOGGER.info(f'Processed {created + updates + skipped + suspect} addresses')
 
     LOGGER.info(f'Created {created} addresses, updated {updates}, skipped {skipped}, suspect {suspect}')
 

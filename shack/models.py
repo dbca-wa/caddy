@@ -12,6 +12,7 @@ class Address(models.Model):
     owner = models.TextField(null=True, blank=True)
     centroid = models.PointField(srid=4326)
     envelope = models.PolygonField(srid=4326, null=True, blank=True)
+    boundary = models.PolygonField(srid=4326, null=True, blank=True)
     data = models.JSONField(default=dict)
 
     def __str__(self):

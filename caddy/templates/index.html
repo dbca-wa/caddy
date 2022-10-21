@@ -1,18 +1,22 @@
 <!doctype html>
 <html lang="en">
     <head>
-        <title>Geocoder</title>
+        <title>Caddy Geocoder</title>
         <meta charset="utf-8">
         <meta http-equiv="X-UA-Compatible" content="IE=edge">
         <meta name="description" content="Cadastre spatial dataset geocoder">
         <meta name="viewport" content="width=device-width, initial-scale=1">
-        <link rel="shortcut icon" href="/static/favicon.ico">
+        <link rel="icon" href="data:,">
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/pure/1.0.1/pure-min.css">
         <style>
-            .preformatted {
-                    font-family: monospace;
-                        white-space: pre;
+          html {
+              padding: 1em 1em;
+              margin: auto;
             }
+          .preformatted {
+            font-family: monospace;
+            white-space: pre;
+          }
         </style>
     </head>
     <body>
@@ -20,19 +24,22 @@
         <p class="browserupgrade">You are using an <strong>outdated</strong> browser.
         Please <a href="http://browsehappy.com/">upgrade your browser</a> to improve your experience.</p>
         <![endif]-->
-        <h1>Geocoder</h1>
+        <h1>Caddy Geocoder</h1>
         <p>API endpoints:</p>
-        <pre>/api/geocode?q=&lt;ADDRESS&gt;</pre>
-        <pre>/api/geocode?q=&lt;OWNER NAME&gt;</pre>
-        <pre>/api/geocode?q=&lt;RESERVE NUMBER&gt;</pre>
-        <pre>/api/geocode?q=&lt;PIN&gt;</pre>
-        <pre>/api/&lt;PIN&gt;</pre>
+        <ul>
+            <li><pre>/api/geocode?q=&lt;ADDRESS&gt;&amp;limit=10</pre> (returns up to 10 results, default reponse is 5 results).</li>
+            <li><pre>/api/geocode?q=&lt;OWNER NAME&gt;</pre></li>
+            <li><pre>/api/geocode?q=&lt;RESERVE NUMBER&gt;</pre></li>
+            <li><pre>/api/geocode?q=&lt;PIN&gt;</pre></li>
+            <li><pre>/api/geocode?point=&lt;LON&gt;,&lt;LAT&gt;</pre> (returns details for a single property intersected by the supplied point).</li>
+            <li><pre>/api/&lt;PIN&gt;</pre> (returns details for a single property, queried by cadastral PIN).</li>
+        </ul>
         <form id="address-search-form" class="pure-form">
             <legend>Search for an address:</legend>
             <input id="address" type="text" class="pure-input-1-2" placeholder="E.g. 17 dick perry avenue kensington">
         </form>
         <p>API response:</p>
-        <div id="api-response" class="preformatted"></div>
+        <div id="api-response" class="preformatted">[]</div>
     </body>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
     <script>

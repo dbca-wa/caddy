@@ -23,7 +23,7 @@ class Command(BaseCommand):
         else:
             limit = None
 
-        qs = CptCadastreScdb.objects.all()
+        qs = CptCadastreScdb.objects.all().order_by('cad_pin')
         if limit:
             qs = qs[0:limit]
         logger.info('Starting copy of {} cadastre addresses'.format(qs.count()))
