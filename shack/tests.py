@@ -43,13 +43,13 @@ class ShackTestCase(TestCase):
         self.assertTrue('SCARBOROUGH' in str(self.address))
 
     def test_geocoder_app(self):
-        resp = self.app.get('/')
-        self.assertTrue(resp.status == '200 OK')
+        response = self.app.get('/', expect_errors=True)
+        self.assertEqual(200, response.status_int, msg=str(response))
 
     def test_geocoder_api_pin(self):
-        resp = self.app.get('/api/1')
-        self.assertTrue(resp.status == '200 OK')
+        response = self.app.get('/api/1', expect_errors=True)
+        self.assertEqual(200, response.status_int, msg=str(response))
 
     def test_geocoder_api_geocode(self):
-        resp = self.app.get('/api/geocode?q=scarborough')
-        self.assertTrue(resp.status == '200 OK')
+        response = self.app.get('/api/geocode?q=scarborough', expect_errors=True)
+        self.assertEqual(200, response.status_int, msg=str(response))
