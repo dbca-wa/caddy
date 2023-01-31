@@ -1,6 +1,7 @@
-name: run-tests
+name: "Run Django unit tests"
 
 on:
+  # Triggers the workflow on push or pull request events but only for the master branch
   push:
     branches: [ master ]
   pull_request:
@@ -13,6 +14,7 @@ jobs:
     runs-on: ubuntu-latest
     env:
       DATABASE_URL: postgis://postgres:postgres@localhost:5432/postgres
+      PORT: 80
     services:
       postgres:
         image: postgis/postgis:13-3.1-alpine
@@ -23,37 +25,55 @@ jobs:
           - 5432:5432
         options: --mount type=tmpfs,destination=/var/lib/postgresql/data --health-cmd pg_isready --health-interval 10s --health-timeout 5s --health-retries 5
     steps:
+      #----------------------------------------------
+      # Checkout repo and set up Python
+      #----------------------------------------------
       - name: Checkout repo
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
+        id: checkout-repo
       - name: Set up Python
-        uses: actions/setup-python@v2
+        uses: actions/setup-python@v4
+        id: setup-python
         with:
-          python-version: 3.9.6
+          python-version: '3.9'
+      #----------------------------------------------
+      # Install GDAL into the environment
+      #----------------------------------------------
       - name: Install GDAL
+        id: install-gdal
         run: |
-          sudo apt-add-repository ppa:ubuntugis/ubuntugis-unstable
+          sudo apt-add-repository --yes ppa:ubuntugis/ubuntugis-unstable
           sudo apt-get update
-          sudo apt-get install gdal-bin libgdal-dev
+          sudo apt-get install --no-install-recommends --yes gdal-bin libgdal-dev
+      #----------------------------------------------
+      # Install & configure Poetry
+      #----------------------------------------------
       - name: Install Poetry
-        uses: snok/install-poetry@v1.2.0
+        uses: snok/install-poetry@v1
         with:
-          version: 1.1.11
           virtualenvs-create: true
           virtualenvs-in-project: true
+          installer-parallel: true
+      #----------------------------------------------
+      # Load cached venv if cache exists
+      #----------------------------------------------
       - name: Load cached venv
         id: cached-poetry-dependencies
-        uses: actions/cache@v2
+        uses: actions/cache@v3
         with:
           path: .venv
-          key: venv-${{ runner.os }}-${{ hashFiles('**/poetry.lock') }}
-      - name: Install dependencies
-        run: poetry install
+          key: venv-${{ runner.os }}-${{ steps.setup-python.outputs.python-version }}-${{ hashFiles('**/poetry.lock') }}
+      #----------------------------------------------
+      # Install project dependencies if cache does not exist
+      #----------------------------------------------
+      - name: Install project dependencies
         if: steps.cached-poetry-dependencies.outputs.cache-hit != 'true'
-      - name: Run DB migrations
-        run: |
-          source .venv/bin/activate
-          python manage.py migrate
+        run: poetry install --no-interaction --no-root
+      #----------------------------------------------
+      # Run unit tests
+      #----------------------------------------------
       - name: Run tests
         run: |
           source .venv/bin/activate
-          python manage.py test --noinput --failfast -v2
+          python manage.py collectstatic
+          python manage.py test
