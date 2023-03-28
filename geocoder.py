@@ -10,8 +10,8 @@ from sqlalchemy.orm import sessionmaker, scoped_session
 
 dot_env = os.path.join(os.getcwd(), '.env')
 if os.path.exists(dot_env):
-    from dotenv import read_dotenv
-    read_dotenv()
+    from dotenv import load_dotenv
+    load_dotenv()
 database_url = env('DATABASE_URL').replace('postgis', 'postgresql')
 engine = create_engine(database_url)
 Session = scoped_session(sessionmaker(bind=engine, autoflush=True))

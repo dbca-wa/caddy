@@ -123,14 +123,6 @@ argon2 = ["argon2-cffi (>=19.1.0)"]
 bcrypt = ["bcrypt"]
 
 [[package]]
-name = "django-dotenv"
-version = "1.4.2"
-description = "foreman reads from .env. manage.py doesn't. Let's fix that."
-category = "main"
-optional = false
-python-versions = "*"
-
-[[package]]
 name = "django-extensions"
 version = "3.0.8"
 description = "Extensions for Django"
@@ -388,6 +380,17 @@ python-versions = "!=3.0.*,!=3.1.*,!=3.2.*,>=2.7"
 six = ">=1.5"
 
 [[package]]
+name = "python-dotenv"
+version = "1.0.0"
+description = "Read key-value pairs from a .env file and set them as environment variables"
+category = "main"
+optional = false
+python-versions = ">=3.8"
+
+[package.extras]
+cli = ["click (>=5.0)"]
+
+[[package]]
 name = "python-mimeparse"
 version = "1.6.0"
 description = "A module provides basic functions for parsing mime-type names and matching them against a list of media-ranges."
@@ -607,7 +610,7 @@ tests = ["PasteDeploy", "WSGIProxy2", "coverage", "pyquery", "pytest", "pytest-c
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.9"
-content-hash = "6d1c755a2e02531cf27dddce72f616fe3befa33aa237d4280efc4c1e87f568fb"
+content-hash = "ab87bf9dc26bd32995ae74e4f9ed5acb92c46d2a40f52ab4bca9ce0ffe11df77"
 
 [metadata.files]
 appnope = [
@@ -657,10 +660,6 @@ dj-database-url = [
 django = [
     {file = "Django-3.2.18-py3-none-any.whl", hash = "sha256:4d492d9024c7b3dfababf49f94511ab6a58e2c9c3c7207786f1ba4eb77750706"},
     {file = "Django-3.2.18.tar.gz", hash = "sha256:08208dfe892eb64fff073ca743b3b952311104f939e7f6dae954fe72dcc533ba"},
-]
-django-dotenv = [
-    {file = "django-dotenv-1.4.2.tar.gz", hash = "sha256:3812bb0f4876cf31f902aad140f0645e120e51ee30eb7c40c22050f58a0e4adb"},
-    {file = "django_dotenv-1.4.2-py2.py3-none-any.whl", hash = "sha256:a9b1b40a70bd321acd231926acedb9bd2c5e873e33a1873b34a7276d196a765e"},
 ]
 django-extensions = [
     {file = "django-extensions-3.0.8.tar.gz", hash = "sha256:a67747508ec39583892fbddf57e0b66b3f332a885ef5520698bc2e1cb351955a"},
@@ -811,6 +810,10 @@ pygments = [
 python-dateutil = [
     {file = "python-dateutil-2.8.2.tar.gz", hash = "sha256:0123cacc1627ae19ddf3c27a5de5bd67ee4586fbdd6440d9748f8abb483d3e86"},
     {file = "python_dateutil-2.8.2-py2.py3-none-any.whl", hash = "sha256:961d03dc3453ebbc59dbdea9e4e11c5651520a876d0f4db161e8674aae935da9"},
+]
+python-dotenv = [
+    {file = "python-dotenv-1.0.0.tar.gz", hash = "sha256:a8df96034aae6d2d50a4ebe8216326c61c3eb64836776504fcca410e5937a3ba"},
+    {file = "python_dotenv-1.0.0-py3-none-any.whl", hash = "sha256:f5971a9226b701070a4bf2c38c89e5a3f0d64de8debda981d1db98583009122a"},
 ]
 python-mimeparse = [
     {file = "python-mimeparse-1.6.0.tar.gz", hash = "sha256:76e4b03d700a641fd7761d3cd4fdbbdcd787eade1ebfac43f877016328334f78"},
