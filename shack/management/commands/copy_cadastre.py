@@ -2,7 +2,7 @@ from django.core.management.base import BaseCommand, CommandError
 import logging
 
 from cddp.models import CptCadastreScdb
-from shack.utils import copy_cddp_cadastre, prune_addresses
+from shack.utils import copy_cddp_cadastre
 
 
 class Command(BaseCommand):
@@ -29,4 +29,3 @@ class Command(BaseCommand):
         logger.info('Starting copy of {} cadastre addresses'.format(qs.count()))
         copy_cddp_cadastre(qs)
         logger.info('Finished copy of cadastre addresses')
-        prune_addresses()
