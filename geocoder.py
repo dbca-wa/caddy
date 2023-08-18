@@ -6,6 +6,7 @@ import re
 import ujson
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, scoped_session
+from sqlalchemy.sql import text
 
 
 dot_env = os.path.join(os.getcwd(), '.env')
@@ -32,7 +33,7 @@ def liveness():
 
 @app.route('/readiness')
 def readiness():
-    sql = 'SELECT 1'
+    sql = text('SELECT 1')
     s = Session()
     result = s.execute(sql).fetchone()
     s.close()
@@ -44,7 +45,7 @@ def readiness():
 @app.route('/api/<object_id>')
 def detail(object_id):
     response.content_type = 'application/json'
-    sql = f"SELECT object_id, address_nice, owner, ST_AsText(centroid), ST_AsText(envelope), ST_AsText(boundary), data FROM shack_address WHERE object_id = '{object_id}'"
+    sql = text(f"SELECT object_id, address_nice, owner, ST_AsText(centroid), ST_AsText(envelope), ST_AsText(boundary), data FROM shack_address WHERE object_id = '{object_id}'")
     s = Session()
     result = s.execute(sql).fetchone()
     s.close()
@@ -75,7 +76,7 @@ def geocode():
         m = lon_lat.match(point)
         if m:
             lon, lat = m.groups()
-            sql = f"SELECT object_id, address_nice, owner, ST_AsText(centroid), ST_AsText(envelope), ST_AsText(boundary), data FROM shack_address WHERE ST_Intersects(boundary, ST_GeomFromEWKT('SRID=4326;POINT({lon} {lat})'))"
+            sql = text(f"SELECT object_id, address_nice, owner, ST_AsText(centroid), ST_AsText(envelope), ST_AsText(boundary), data FROM shack_address WHERE ST_Intersects(boundary, ST_GeomFromEWKT('SRID=4326;POINT({lon} {lat})'))")
             s = Session()
             result = s.execute(sql).fetchone()
             s.close()
@@ -96,7 +97,7 @@ def geocode():
     # Address query
     words = q.split()
     words = ' & '.join(words)
-    sql = f"SELECT address_nice, owner, ST_X(centroid), ST_Y(centroid), object_id FROM shack_address WHERE tsv @@ to_tsquery('{words}')"
+    sql = text(f"SELECT address_nice, owner, ST_X(centroid), ST_Y(centroid), object_id FROM shack_address WHERE tsv @@ to_tsquery('{words}')")
     s = Session()
     result = s.execute(sql).fetchmany(int(limit))
     s.close()
