@@ -39,7 +39,6 @@ INSTALLED_APPS = (
     'django_extensions',
     'tastypie',
     'shack',
-    'cddp',
 )
 MIDDLEWARE = [
     'django.middleware.common.CommonMiddleware',
@@ -69,9 +68,6 @@ DATABASES = {
     # Defined in the DATABASE_URL env variable.
     'default': dj_database_url.config(),
 }
-if env('CDDP_DATABASE_URL', None):
-    DATABASES['cddp'] = dj_database_url.parse(env('CDDP_DATABASE_URL'))
-    DATABASE_ROUTERS = ['cddp.router.CddpDBRouter']
 
 
 # Internationalization
