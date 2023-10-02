@@ -21,7 +21,6 @@ RUN poetry config virtualenvs.create false \
 # Install the project.
 COPY geocoder.py gunicorn.py manage.py ./
 COPY caddy ./caddy
-COPY cddp ./cddp
 COPY shack ./shack
 
 # Run the application as the www-data user.
