@@ -1,5 +1,5 @@
 # Prepare the base environment.
-FROM python:3.10.12-slim-bookworm as builder_base_caddy
+FROM python:3.10.13-slim-bookworm as builder_base_caddy
 MAINTAINER asi@dbca.wa.gov.au
 LABEL org.opencontainers.image.source https://github.com/dbca-wa/caddy
 
