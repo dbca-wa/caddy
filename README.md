@@ -73,3 +73,16 @@ bounding box.
 
 Further reference:
 http://www.postgresql.org/docs/current/static/textsearch.html
+
+# Pre-commit hooks
+
+This project includes the following pre-commit hooks:
+
+- TruffleHog (credential scanning): https://github.com/marketplace/actions/trufflehog-oss
+
+Pre-commit hooks may have additional system dependencies to run. Optionally
+install pre-commit hooks locally like so:
+
+    poetry run pre-commit install
+
+Reference: https://pre-commit.com/
