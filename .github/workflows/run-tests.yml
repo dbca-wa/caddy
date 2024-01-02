@@ -29,7 +29,7 @@ jobs:
       # Checkout repo and set up Python
       #----------------------------------------------
       - name: Checkout repo
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         id: checkout-repo
       - name: Set up Python
         uses: actions/setup-python@v4
