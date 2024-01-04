@@ -223,12 +223,11 @@ def import_cpt_cadastre_scdb(blob_name=None):
     LOGGER.info("Download complete")
 
     gpkg = GeoPackage(blob_local.name)
+    # gpkg.connection opens a sqlite3 connection to the GPKG database.
     cursor = gpkg.connection.execute("SELECT COUNT(*) FROM CPT_CADASTRE_SCDB")
     count = cursor.fetchone()
     LOGGER.info(f"Importing {count[0]} cadastre records")
 
-    cursor = gpkg.connection.execute("SELECT * FROM CPT_CADASTRE_SCDB")
-    rows = cursor.fetchall()
     count = 0
     created = 0
     updates = 0
@@ -236,7 +235,8 @@ def import_cpt_cadastre_scdb(blob_name=None):
     skipped = 0
     reserve_pattern = re.compile("(?P<reserve>[0-9]+)$")
 
-    for row in rows:
+    # Iterate over the database records.
+    for row in gpkg.connection.execute("SELECT * FROM CPT_CADASTRE_SCDB"):
         count += 1
         record = dict(zip(CPT_CADASTRE_SCDB_SCHEMA, row))
 
