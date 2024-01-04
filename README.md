@@ -30,17 +30,14 @@ Required settings are as follows:
 
 Optional variables below may also need to be defined (context-dependent):
 
+    ALLOWED__DOMAINS=".domain.com"
     GEOSERVER_URL="https://geoserver.service.url/"
     GEOSERVER_USER="username"
     GEOSERVER_PASSWORD="password"
     CADASTRE_LAYER="workspace:layer"
-    CDDP_DATABASE_URL="postgres://USER:PASSWORD@HOST:PORT/NAME"
 
 *NOTE*: the `GEOSERVER_*` settings are to a WFS service endpoint. The
 `CADASTRE_LAYER` is the WFS layer (**workspace:layer**).
-
-The `CDDP_DATABASE_URL` setting is required to run the management command used
-to directly copy the Cadastre data from a database source.
 
 # Usage
 

@@ -30,7 +30,6 @@ COPY geocoder.py gunicorn.py manage.py ./
 COPY caddy ./caddy
 COPY shack ./shack
 
-# Run the application as the www-data user.
 USER ${UID}
 EXPOSE 8080
 CMD ["gunicorn", "caddy.wsgi", "--config", "gunicorn.py"]
