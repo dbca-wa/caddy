@@ -1,3 +1,5 @@
+from azure.storage.blob import BlobClient
+from django.conf import settings
 from django.contrib.gis.geos import GEOSGeometry, MultiPolygon, Point
 from django.db.migrations.operations.base import Operation
 from fudgeo.geopkg import GeoPackage
@@ -6,6 +8,7 @@ import ujson
 import os
 import re
 import requests
+from tempfile import NamedTemporaryFile
 
 from .models import Address
 
@@ -199,13 +202,31 @@ CPT_CADASTRE_SCDB_SCHEMA = (
 )
 
 
-def import_cpt_cadastre_scdb(gpkg_path=None):
-    """Function to import CPT_CADASTRE_SCDB.gpkg
+def import_cpt_cadastre_scdb(blob_name=None):
+    """Function to import CPT_CADASTRE_SCDB.gpkg from blob store.
     """
-    if not gpkg_path:
+    if not blob_name:
         return
 
-    gpkg = GeoPackage(gpkg_path)
+    # Download the Cadastre blob locally to a temporary file.
+    blob = BlobClient(
+        account_url=f"https://{settings.AZURE_ACCOUNT_NAME}.blob.core.windows.net",
+        credential=settings.AZURE_ACCOUNT_KEY,
+        container_name=settings.AZURE_CONTAINER,
+        blob_name=blob_name,
+    )
+    LOGGER.info(f"Downloading {blob_name} from blob store")
+    blob_local = NamedTemporaryFile()
+    data = blob.download_blob()
+    data.readinto(blob_local)
+    blob_local.flush()
+    LOGGER.info("Download complete")
+
+    gpkg = GeoPackage(blob_local.name)
+    cursor = gpkg.connection.execute("SELECT COUNT(*) FROM CPT_CADASTRE_SCDB")
+    count = cursor.fetchone()
+    LOGGER.info(f"Importing {count[0]} cadastre records")
+
     cursor = gpkg.connection.execute("SELECT * FROM CPT_CADASTRE_SCDB")
     rows = cursor.fetchall()
     count = 0
