@@ -1,0 +1,54 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: caddy-deployment
+spec:
+  replicas: 2
+  strategy:
+    type: RollingUpdate
+  template:
+    spec:
+      containers:
+      - name: caddy
+        image: ghcr.io/dbca-wa/caddy
+        imagePullPolicy: Always
+        env:
+        - name: ALLOWED_HOSTS
+          value: ".dbca.wa.gov.au"
+        - name: TZ
+          value: "Australia/Perth"
+        resources:
+          requests:
+            memory: "128Mi"
+            cpu: "10m"
+          limits:
+            memory: "2Gi"
+            cpu: "1000m"
+        livenessProbe:
+          httpGet:
+            path: /liveness
+            port: 8080
+            scheme: HTTP
+          periodSeconds: 15
+          successThreshold: 1
+          failureThreshold: 3
+          timeoutSeconds: 5
+        readinessProbe:
+          httpGet:
+            path: /readiness
+            port: 8080
+            scheme: HTTP
+          periodSeconds: 15
+          successThreshold: 1
+          failureThreshold: 3
+          timeoutSeconds: 5
+        securityContext:
+          runAsNonRoot: true
+          privileged: false
+          allowPrivilegeEscalation: false
+          capabilities:
+            drop:
+              - ALL
+          readOnlyRootFilesystem: false
+      restartPolicy: Always
+      terminationGracePeriodSeconds: 180

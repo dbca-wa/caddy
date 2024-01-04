@@ -1,0 +1,17 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: caddy-ingress
+spec:
+  ingressClassName: nginx
+  rules:
+  - host: caddy-uat.dbca.wa.gov.au
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: caddy-clusterip-uat
+            port:
+              number: 8080
