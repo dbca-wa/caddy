@@ -1,0 +1,10 @@
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: caddy-pdb
+spec:
+  minAvailable: 1
+  selector:
+    matchLabels:
+      app: caddy-prod
+      variant: prod

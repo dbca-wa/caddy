@@ -1,0 +1,28 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: caddy-deployment
+  labels:
+    app: caddy-uat
+spec:
+  selector:
+    matchLabels:
+      app: caddy-uat
+  template:
+    metadata:
+      labels:
+        app: caddy-uat
+    spec:
+      containers:
+      - name: caddy
+        env:
+        - name: DATABASE_URL
+          valueFrom:
+            secretKeyRef:
+              name: caddy-env-uat
+              key: DATABASE_URL
+        - name: SECRET_KEY
+          valueFrom:
+            secretKeyRef:
+              name: caddy-env-uat
+              key: SECRET_KEY

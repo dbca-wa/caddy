@@ -1,4 +1,4 @@
-from django.core.management.base import BaseCommand, CommandError
+from django.core.management.base import BaseCommand
 import logging
 from shack.utils import import_cpt_cadastre_scdb
 
@@ -6,22 +6,22 @@ logger = logging.getLogger('caddy')
 
 
 class Command(BaseCommand):
-    help = 'Undertakes harvest of address data from CPT_CADASTRE_SCDB.gpkg'
+    help = 'Undertakes import of address data from the Cadastre Geopackage blob'
 
     def add_arguments(self, parser):
         parser.add_argument(
-            '--path', action='store', dest='path', default=None,
-            help='File path to the Geopackage file',
+            '--blob-name', action='store', dest='blob_name', default='CPT_CADASTRE_SCDB.gpkg',
+            help='Blob name (optional)',
         )
 
     def handle(self, *args, **options):
-        if options['path']:
-            path = options['path']
+        if options['blob_name']:
+            blob_name = options['blob_name']
         else:
-            path = None
+            blob_name = None
 
-        logger.info('Starting harvest of cadastre addresses')
-        import_cpt_cadastre_scdb(path)
-        self.stdout.write('Finished harvest of cadastre addresses')
+        logger.info('Starting import of Cadastre addresses from blob store')
+        import_cpt_cadastre_scdb(blob_name)
+        self.stdout.write('Finished import of Cadastre addresses')
 
         return

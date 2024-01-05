@@ -29,6 +29,12 @@ else:
 INTERNAL_IPS = ['127.0.0.1', '::1']
 ROOT_URLCONF = 'caddy.urls'
 WSGI_APPLICATION = 'caddy.wsgi.application'
+
+# Azure blob storage credentials.
+AZURE_ACCOUNT_NAME = env('AZURE_ACCOUNT_NAME', 'account_name')
+AZURE_ACCOUNT_KEY = env('AZURE_ACCOUNT_KEY', 'account_key')
+AZURE_CONTAINER = env('AZURE_CONTAINER', 'container')
+
 INSTALLED_APPS = (
     'django.contrib.auth',
     'django.contrib.contenttypes',
