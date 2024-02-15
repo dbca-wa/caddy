@@ -20,13 +20,13 @@ gunicorn = "21.2.0"
 mixer = "7.2.2"
 WebTest = "3.0.0"
 fudgeo = "0.7.1"
-sqlalchemy = "2.0.25"
+sqlalchemy = "2.0.26"
 azure-storage-blob = "12.19.0"
 
 [tool.poetry.group.dev.dependencies]
 ipython = "^8.21.0"
 ipdb = "^0.13.13"
-pre-commit = "^3.6.0"
+pre-commit = "^3.6.1"
 
 [build-system]
 requires = ["poetry-core"]
