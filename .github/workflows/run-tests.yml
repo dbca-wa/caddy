@@ -14,10 +14,9 @@ jobs:
     runs-on: ubuntu-latest
     env:
       DATABASE_URL: postgis://postgres:postgres@localhost:5432/postgres
-      PORT: 80
     services:
       postgres:
-        image: postgis/postgis:13-3.1-alpine
+        image: postgis/postgis:15-3.4-alpine
         env:
           POSTGRES_USER: postgres
           POSTGRES_PASSWORD: postgres
@@ -25,17 +24,6 @@ jobs:
           - 5432:5432
         options: --mount type=tmpfs,destination=/var/lib/postgresql/data --health-cmd pg_isready --health-interval 10s --health-timeout 5s --health-retries 5
     steps:
-      #----------------------------------------------
-      # Checkout repo and set up Python
-      #----------------------------------------------
-      - name: Checkout repo
-        uses: actions/checkout@v4
-        id: checkout-repo
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        id: setup-python
-        with:
-          python-version: '3.9'
       #----------------------------------------------
       # Install GDAL into the environment
       #----------------------------------------------
@@ -45,6 +33,18 @@ jobs:
           sudo apt-add-repository --yes ppa:ubuntugis/ubuntugis-unstable
           sudo apt-get update
           sudo apt-get install --no-install-recommends --yes gdal-bin libgdal-dev
+      #----------------------------------------------
+      # Checkout repo and set up Python
+      #----------------------------------------------
+      - name: Check out repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        id: setup-python
+        with:
+          python-version: '3.11'
       #----------------------------------------------
       # Install & configure Poetry
       #----------------------------------------------

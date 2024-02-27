@@ -1,12 +1,12 @@
 [tool.poetry]
 name = "caddy"
-version = "2.3.2"
+version = "2.3.3"
 description = "Lightweight application service to harvest and index the cadastre dataset, and expose an API endpoint to allow full-text searching of addresses."
 authors = ["Ashley Felton <ashley.felton@dbca.wa.gov.au>"]
 license = "Apache License 2.0"
 
 [tool.poetry.dependencies]
-python = "^3.10"
+python = "^3.11"
 django = "3.2.24"
 psycopg2 = "2.9.9"
 python-dotenv = "1.0.1"
