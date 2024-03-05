@@ -25,13 +25,13 @@ def index():
     return static_file('index.html', root='caddy/templates')
 
 
-@app.route('/liveness')
+@app.route('/livez')
 def liveness():
     response.content_type = 'application/json'
     return '{"liveness": "OK"}'
 
 
-@app.route('/readiness')
+@app.route('/readyz')
 def readiness():
     sql = text('SELECT 1')
     s = Session()
