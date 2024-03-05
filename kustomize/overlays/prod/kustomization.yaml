@@ -20,4 +20,4 @@ patches:
   - path: service_patch.yaml
 images:
   - name: ghcr.io/dbca-wa/caddy
-    newTag: 2.3.2
+    newTag: 2.3.3

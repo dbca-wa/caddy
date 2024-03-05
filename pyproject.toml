@@ -1,13 +1,13 @@
 [tool.poetry]
 name = "caddy"
-version = "2.3.2"
+version = "2.3.3"
 description = "Lightweight application service to harvest and index the cadastre dataset, and expose an API endpoint to allow full-text searching of addresses."
 authors = ["Ashley Felton <ashley.felton@dbca.wa.gov.au>"]
 license = "Apache License 2.0"
 
 [tool.poetry.dependencies]
-python = "^3.10"
-django = "3.2.24"
+python = "^3.11"
+django = "4.2.10"
 psycopg2 = "2.9.9"
 python-dotenv = "1.0.1"
 dj-database-url = "2.1.0"
@@ -20,13 +20,13 @@ gunicorn = "21.2.0"
 mixer = "7.2.2"
 WebTest = "3.0.0"
 fudgeo = "0.7.1"
-sqlalchemy = "2.0.26"
+sqlalchemy = "2.0.27"
 azure-storage-blob = "12.19.0"
 
 [tool.poetry.group.dev.dependencies]
-ipython = "^8.21.0"
+ipython = "^8.22.1"
 ipdb = "^0.13.13"
-pre-commit = "^3.6.1"
+pre-commit = "^3.6.2"
 
 [build-system]
 requires = ["poetry-core"]
