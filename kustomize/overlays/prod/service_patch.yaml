@@ -5,5 +5,5 @@ metadata:
 spec:
   type: ClusterIP
   selector:
-    app: caddy-prod
+    app: caddy-deployment
     variant: prod
