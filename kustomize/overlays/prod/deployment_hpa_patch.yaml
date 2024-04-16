@@ -1,0 +1,7 @@
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: caddy-deployment-hpa
+spec:
+  scaleTargetRef:
+    name: caddy-deployment-prod
