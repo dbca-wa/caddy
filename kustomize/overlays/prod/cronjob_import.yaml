@@ -42,8 +42,8 @@ spec:
                   key: AZURE_CONTAINER
             resources:
               requests:
-                memory: "1Gi"
-                cpu: "100m"
+                memory: "256Mi"
+                cpu: "10m"
               limits:
                 memory: "2Gi"
                 cpu: "1000m"
