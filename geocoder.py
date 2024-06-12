@@ -17,7 +17,10 @@ database_url = env("DATABASE_URL").replace("postgis", "postgresql+psycopg")
 engine = create_engine(database_url)
 Session = scoped_session(sessionmaker(bind=engine, autoflush=True))
 app = application = Bottle()
-lon_lat = re.compile(r"(?P<lon>-?[0-9]+.[0-9]+),\s*(?P<lat>-?[0-9]+.[0-9]+)")
+
+# Regex patterns
+LON_LAT_PATTERN = re.compile(r"(?P<lon>-?[0-9]+.[0-9]+),\s*(?P<lat>-?[0-9]+.[0-9]+)")
+ALPHANUM_PATTERN = re.compile(r"[^A-Za-z0-9\s]+")
 
 
 @app.route("/")
@@ -84,7 +87,7 @@ def geocode():
 
     # Point intersection query
     if point:  # Must be in the format lon,lat
-        m = lon_lat.match(point)
+        m = LON_LAT_PATTERN.match(point)
         if m:
             lon, lat = m.groups()
             # Validate `lon` and `lat` by casting them to float values.
@@ -101,6 +104,8 @@ def geocode():
             cursor = s.execute(sql)
             result = cursor.fetchone()
             s.close()
+
+            # Serialise and return any query result.
             if result:
                 return ujson.dumps({
                     "object_id": result[0],
@@ -117,6 +122,17 @@ def geocode():
             return "[]"
 
     # Address query
+    # Sanitise the input query: remove any non-alphanumeric/whitespace characters.
+    q = re.sub(ALPHANUM_PATTERN, "", q)
+    words = q.split()  # Split words on whitespace.
+    tsquery = "&".join(words)
+    sql = text(f"""SELECT address_nice, owner, ST_X(centroid), ST_Y(centroid), object_id
+               FROM shack_address
+               WHERE tsv @@ to_tsquery(:tsquery)""")
+    sql = sql.bindparams(tsquery=tsquery)
+    s = Session()
+    cursor = s.execute(sql)
+
     # Default to return a maximum of five results, allow override via `limit`.
     if request.query.limit:
         try:
@@ -125,20 +141,10 @@ def geocode():
             return "[]"
     else:
         limit = 5
-    # Sanitise the input query: remove any non-alphanumeric characters, replace any multiple with single whitespace.
-    pattern = r"[^A-Za-z0-9]+"
-    q = re.sub(pattern, "", q)
-    words = q.split()
-    words = " & ".join(words)
-    sql = text(f"""SELECT address_nice, owner, ST_X(centroid), ST_Y(centroid), object_id
-               FROM shack_address
-               WHERE tsv @@ to_tsquery(:words)""")
-    sql = sql.bindparams(words=words)
-    s = Session()
-    cursor = s.execute(sql)
-    result = cursor.fetchone()
     result = cursor.fetchmany(limit)
     s.close()
+
+    # Serialise and return any query result.
     if result:
         j = []
         for i in result:
