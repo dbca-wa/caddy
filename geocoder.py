@@ -5,7 +5,6 @@ import os
 import re
 import ujson
 from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker, scoped_session
 from sqlalchemy.sql import text
 
 
@@ -13,10 +12,12 @@ dot_env = os.path.join(os.getcwd(), ".env")
 if os.path.exists(dot_env):
     from dotenv import load_dotenv
     load_dotenv()
-database_url = env("DATABASE_URL").replace("postgis", "postgresql+psycopg")
-engine = create_engine(database_url)
-Session = scoped_session(sessionmaker(bind=engine, autoflush=True))
 app = application = Bottle()
+
+
+# Database connection
+database_url = env("DATABASE_URL").replace("postgis", "postgresql+psycopg")
+DB_ENGINE = create_engine(database_url)
 
 # Regex patterns
 LON_LAT_PATTERN = re.compile(r"(?P<lon>-?[0-9]+.[0-9]+),\s*(?P<lat>-?[0-9]+.[0-9]+)")
@@ -28,21 +29,23 @@ def index():
     return static_file("index.html", root="caddy/templates")
 
 
+@app.route("/favicon.ico")
+def favicon():
+    return static_file("favicon.ico", root="caddy/static")
+
+
 @app.route("/livez")
 def liveness():
-    response.content_type = "application/json"
-    return "{'liveness': 'OK'}"
+    return "OK"
 
 
 @app.route("/readyz")
 def readiness():
-    s = Session()
-    cursor = s.execute(text("SELECT 1"))
-    result = cursor.fetchone()
-    s.close()
+    conn = DB_ENGINE.connect()
+    result = conn.execute(text("SELECT 1")).fetchone()
+
     if result:
-        response.content_type = "application/json"
-        return "{'readiness': 'OK'}"
+        return "OK"
 
 
 @app.route("/api/<object_id>")
@@ -51,17 +54,16 @@ def detail(object_id):
     try:
         int(object_id)
     except ValueError:
-        return "{}"
+        response.status = 400
+        return "Bad request"
 
     response.content_type = "application/json"
     sql = text(f"""SELECT object_id, address_nice, owner, ST_AsText(centroid), ST_AsText(envelope), ST_AsText(boundary), data
                FROM shack_address
                WHERE object_id = :object_id""")
     sql = sql.bindparams(object_id=object_id)
-    s = Session()
-    cursor = s.execute(sql)
-    result = cursor.fetchone()
-    s.close()
+    conn = DB_ENGINE.connect()
+    result = conn.execute(sql).fetchone()
 
     if result:
         return ujson.dumps({
@@ -79,11 +81,11 @@ def detail(object_id):
 
 @app.route("/api/geocode")
 def geocode():
-    response.content_type = "application/json"
     q = request.query.q or ""
     point = request.query.point or ""
     if not q and not point:
-        return "[]"
+        response.status = 400
+        return "Bad request"
 
     # Point intersection query
     if point:  # Must be in the format lon,lat
@@ -100,10 +102,9 @@ def geocode():
                        FROM shack_address
                        WHERE ST_Intersects(boundary, ST_GeomFromEWKT(:ewkt))""")
             sql = sql.bindparams(ewkt=ewkt)
-            s = Session()
-            cursor = s.execute(sql)
-            result = cursor.fetchone()
-            s.close()
+            conn = DB_ENGINE.connect()
+            result = conn.execute(sql).fetchone()
+            response.content_type = "application/json"
 
             # Serialise and return any query result.
             if result:
@@ -119,32 +120,35 @@ def geocode():
             else:
                 return "{}"
         else:
-            return "[]"
+            response.status = 400
+            return "Bad request"
 
     # Address query
     # Sanitise the input query: remove any non-alphanumeric/whitespace characters.
     q = re.sub(ALPHANUM_PATTERN, "", q)
     words = q.split()  # Split words on whitespace.
     tsquery = "&".join(words)
-    sql = text(f"""SELECT address_nice, owner, ST_X(centroid), ST_Y(centroid), object_id
-               FROM shack_address
-               WHERE tsv @@ to_tsquery(:tsquery)""")
-    sql = sql.bindparams(tsquery=tsquery)
-    s = Session()
-    cursor = s.execute(sql)
 
     # Default to return a maximum of five results, allow override via `limit`.
     if request.query.limit:
         try:
             limit = int(request.query.limit)
         except ValueError:
-            return "[]"
+            response.status = 400
+            return "Bad request"
     else:
         limit = 5
-    result = cursor.fetchmany(limit)
-    s.close()
 
-    # Serialise and return any query result.
+    sql = text(f"""SELECT address_nice, owner, ST_X(centroid), ST_Y(centroid), object_id
+               FROM shack_address
+               WHERE tsv @@ to_tsquery(:tsquery)
+               LIMIT :limit""")
+    sql = sql.bindparams(tsquery=tsquery, limit=limit)
+    conn = DB_ENGINE.connect()
+    result = conn.execute(sql).fetchall()
+    response.content_type = "application/json"
+
+    # Serialise and return any query results.
     if result:
         j = []
         for i in result:
@@ -162,4 +166,4 @@ def geocode():
 
 if __name__ == "__main__":
     from bottle import run
-    run(application, host="0.0.0.0", port=env("PORT", 8211))
+    run(application, host="0.0.0.0", port=env("PORT", 8080))

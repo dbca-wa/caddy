@@ -1,4 +1,3 @@
-__version__ = '1.0.0'
 import ast
 import os
 
@@ -16,4 +15,4 @@ def env(key, default=None, required=False):
     except KeyError:
         if default or not required:
             return default
-        raise Exception("Missing required environment variable '%s'" % key)
+        raise Exception(f"Missing required environment variable '{key}'")
