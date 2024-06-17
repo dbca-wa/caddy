@@ -5,6 +5,7 @@ import os
 import re
 import ujson
 from sqlalchemy import create_engine
+from sqlalchemy.orm import sessionmaker, scoped_session
 from sqlalchemy.sql import text
 
 
@@ -15,9 +16,11 @@ if os.path.exists(dot_env):
 app = application = Bottle()
 
 
-# Database connection
+# Database connection - create a DB engine and a scoped session for queries.
+# https://docs.sqlalchemy.org/en/20/orm/contextual.html#unitofwork-contextual
 database_url = env("DATABASE_URL").replace("postgis", "postgresql+psycopg")
-DB_ENGINE = create_engine(database_url)
+db_engine = create_engine(database_url)
+session = scoped_session(sessionmaker(bind=db_engine, autoflush=True))()
 
 # Regex patterns
 LON_LAT_PATTERN = re.compile(r"(?P<lon>-?[0-9]+.[0-9]+),\s*(?P<lat>-?[0-9]+.[0-9]+)")
@@ -41,8 +44,7 @@ def liveness():
 
 @app.route("/readyz")
 def readiness():
-    conn = DB_ENGINE.connect()
-    result = conn.execute(text("SELECT 1")).fetchone()
+    result = session.execute(text("SELECT 1")).fetchone()
 
     if result:
         return "OK"
@@ -62,8 +64,7 @@ def detail(object_id):
                FROM shack_address
                WHERE object_id = :object_id""")
     sql = sql.bindparams(object_id=object_id)
-    conn = DB_ENGINE.connect()
-    result = conn.execute(sql).fetchone()
+    result = session.execute(sql).fetchone()
 
     if result:
         return ujson.dumps({
@@ -102,11 +103,10 @@ def geocode():
                        FROM shack_address
                        WHERE ST_Intersects(boundary, ST_GeomFromEWKT(:ewkt))""")
             sql = sql.bindparams(ewkt=ewkt)
-            conn = DB_ENGINE.connect()
-            result = conn.execute(sql).fetchone()
-            response.content_type = "application/json"
+            result = session.execute(sql).fetchone()
 
             # Serialise and return any query result.
+            response.content_type = "application/json"
             if result:
                 return ujson.dumps({
                     "object_id": result[0],
@@ -144,11 +144,10 @@ def geocode():
                WHERE tsv @@ to_tsquery(:tsquery)
                LIMIT :limit""")
     sql = sql.bindparams(tsquery=tsquery, limit=limit)
-    conn = DB_ENGINE.connect()
-    result = conn.execute(sql).fetchall()
-    response.content_type = "application/json"
+    result = session.execute(sql).fetchall()
 
     # Serialise and return any query results.
+    response.content_type = "application/json"
     if result:
         j = []
         for i in result:
