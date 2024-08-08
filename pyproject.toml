@@ -22,7 +22,7 @@ mixer = "7.2.2"
 WebTest = "3.0.0"
 fudgeo = "0.8.0"
 sqlalchemy = "2.0.31"
-azure-storage-blob = "12.21.0"
+azure-storage-blob = "12.22.0"
 
 [tool.poetry.group.dev.dependencies]
 ipython = "^8.26.0"
