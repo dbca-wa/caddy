@@ -21,7 +21,7 @@ gunicorn = "22.0.0"
 mixer = "7.2.2"
 WebTest = "3.0.0"
 fudgeo = "0.8.0"
-sqlalchemy = "2.0.31"
+sqlalchemy = "2.0.32"
 azure-storage-blob = "12.22.0"
 
 [tool.poetry.group.dev.dependencies]
