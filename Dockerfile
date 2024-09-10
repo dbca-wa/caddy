@@ -1,6 +1,6 @@
 # syntax=docker/dockerfile:1
 # Prepare the base environment.
-FROM python:3.11.9-slim AS builder_base_caddy
+FROM python:3.12.4-slim AS builder_base_caddy
 LABEL org.opencontainers.image.authors=asi@dbca.wa.gov.au
 LABEL org.opencontainers.image.source=https://github.com/dbca-wa/caddy
 
@@ -14,7 +14,7 @@ RUN apt-get update -y \
 FROM builder_base_caddy AS python_libs_caddy
 WORKDIR /app
 ARG POETRY_VERSION=1.8.3
-RUN pip install --root-user-action=ignore poetry=="${POETRY_VERSION}"
+RUN pip install --no-cache-dir --root-user-action=ignore poetry==${POETRY_VERSION}
 COPY poetry.lock pyproject.toml ./
 RUN poetry config virtualenvs.create false \
   && poetry install --no-interaction --no-ansi --only main
@@ -22,8 +22,8 @@ RUN poetry config virtualenvs.create false \
 # Create a non-root user.
 ARG UID=10001
 ARG GID=10001
-RUN groupadd -g "${GID}" appuser \
-  && useradd --no-create-home --no-log-init --uid "${UID}" --gid "${GID}" appuser
+RUN groupadd -g ${GID} appuser \
+  && useradd --no-create-home --no-log-init --uid ${UID} --gid ${GID} appuser
 
 # Install the project.
 COPY geocoder.py gunicorn.py manage.py ./
