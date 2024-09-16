@@ -1,4 +1,4 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
     <head>
         <title>Caddy Geocoder</title>
@@ -7,7 +7,11 @@
         <meta name="description" content="Cadastre spatial dataset geocoder">
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <link rel="icon" href="data:,">
-        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/pure/1.0.1/pure-min.css">
+        <link rel="stylesheet"
+              href="https://cdnjs.cloudflare.com/ajax/libs/pure/3.0.0/pure-min.css"
+              integrity="sha512-X2yGIVwg8zeG8N4xfsidr9MqIfIE8Yz1It+w2rhUJMqxUwvbVqC5OPcyRlPKYOw/bsdJut91//NO9rSbQZIPRQ=="
+              crossorigin="anonymous"
+              referrerpolicy="no-referrer" />
         <style>
           html {
               padding: 1em 1em;
@@ -27,21 +31,39 @@
         <h1>Caddy Geocoder</h1>
         <p>API endpoints:</p>
         <ul>
-            <li><pre>/api/geocode?q=&lt;ADDRESS&gt;&amp;limit=10</pre> (returns up to 10 results, default reponse is 5 results).</li>
-            <li><pre>/api/geocode?q=&lt;OWNER NAME&gt;</pre></li>
-            <li><pre>/api/geocode?q=&lt;RESERVE NUMBER&gt;</pre></li>
-            <li><pre>/api/geocode?q=&lt;PIN&gt;</pre></li>
-            <li><pre>/api/geocode?point=&lt;LON&gt;,&lt;LAT&gt;</pre> (returns details for a single property intersected by the supplied point).</li>
-            <li><pre>/api/&lt;PIN&gt;</pre> (returns details for a single property, queried by cadastral PIN).</li>
+            <li>
+                <pre>/api/geocode?q=&lt;ADDRESS&gt;&amp;limit=10</pre> (returns up to 10 results, default reponse is 5 results).
+            </li>
+            <li>
+                <pre>/api/geocode?q=&lt;OWNER NAME&gt;</pre>
+            </li>
+            <li>
+                <pre>/api/geocode?q=&lt;RESERVE NUMBER&gt;</pre>
+            </li>
+            <li>
+                <pre>/api/geocode?q=&lt;PIN&gt;</pre>
+            </li>
+            <li>
+                <pre>/api/geocode?point=&lt;LON&gt;,&lt;LAT&gt;</pre> (returns details for a single property intersected by the supplied point).
+            </li>
+            <li>
+                <pre>/api/&lt;PIN&gt;</pre> (returns details for a single property, queried by cadastral PIN).
+            </li>
         </ul>
         <form id="address-search-form" class="pure-form">
             <legend>Search for an address:</legend>
-            <input id="address" type="text" class="pure-input-1-2" placeholder="E.g. 17 dick perry avenue kensington">
+            <input id="address"
+                   type="text"
+                   class="pure-input-1-2"
+                   placeholder="E.g. 17 dick perry avenue kensington">
         </form>
         <p>API response:</p>
         <div id="api-response" class="preformatted">[]</div>
     </body>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js"
+            integrity="sha512-v2CJ7UaYy4JwqLDIrZUI/4hqeoQieOmAZNXBeQyjo21dadnwR+8ZaIJVT8EE2iyI61OV8e6M8PP2/4hpQINQ/g=="
+            crossorigin="anonymous"
+            referrerpolicy="no-referrer"></script>
     <script>
         $(function() {
             $('#address-search-form').on("submit",function(e) {

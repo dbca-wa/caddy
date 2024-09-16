@@ -1,17 +1,19 @@
 #!/usr/bin/python
-from bottle import Bottle, static_file, request, response
-from caddy.utils import env
 import os
 import re
+
 import ujson
+from bottle import Bottle, request, response, static_file
 from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker, scoped_session
+from sqlalchemy.orm import scoped_session, sessionmaker
 from sqlalchemy.sql import text
 
+from caddy.utils import env
 
 dot_env = os.path.join(os.getcwd(), ".env")
 if os.path.exists(dot_env):
     from dotenv import load_dotenv
+
     load_dotenv()
 app = application = Bottle()
 
@@ -60,22 +62,24 @@ def detail(object_id):
         return "Bad request"
 
     response.content_type = "application/json"
-    sql = text(f"""SELECT object_id, address_nice, owner, ST_AsText(centroid), ST_AsText(envelope), ST_AsText(boundary), data
+    sql = text("""SELECT object_id, address_nice, owner, ST_AsText(centroid), ST_AsText(envelope), ST_AsText(boundary), data
                FROM shack_address
                WHERE object_id = :object_id""")
     sql = sql.bindparams(object_id=object_id)
     result = session.execute(sql).fetchone()
 
     if result:
-        return ujson.dumps({
-            "object_id": result[0],
-            "address": result[1],
-            "owner": result[2],
-            "centroid": result[3],
-            "envelope": result[4],
-            "boundary": result[5],
-            "data": result[6],
-        })
+        return ujson.dumps(
+            {
+                "object_id": result[0],
+                "address": result[1],
+                "owner": result[2],
+                "centroid": result[3],
+                "envelope": result[4],
+                "boundary": result[5],
+                "data": result[6],
+            }
+        )
     else:
         return "{}"
 
@@ -108,15 +112,17 @@ def geocode():
             # Serialise and return any query result.
             response.content_type = "application/json"
             if result:
-                return ujson.dumps({
-                    "object_id": result[0],
-                    "address": result[1],
-                    "owner": result[2],
-                    "centroid": result[3],
-                    "envelope": result[4],
-                    "boundary": result[5],
-                    "data": result[6],
-                })
+                return ujson.dumps(
+                    {
+                        "object_id": result[0],
+                        "address": result[1],
+                        "owner": result[2],
+                        "centroid": result[3],
+                        "envelope": result[4],
+                        "boundary": result[5],
+                        "data": result[6],
+                    }
+                )
             else:
                 return "{}"
         else:
@@ -139,7 +145,7 @@ def geocode():
     else:
         limit = 5
 
-    sql = text(f"""SELECT address_nice, owner, ST_X(centroid), ST_Y(centroid), object_id
+    sql = text("""SELECT address_nice, owner, ST_X(centroid), ST_Y(centroid), object_id
                FROM shack_address
                WHERE tsv @@ to_tsquery(:tsquery)
                LIMIT :limit""")
@@ -151,13 +157,15 @@ def geocode():
     if result:
         j = []
         for i in result:
-            j.append({
-                "address": i[0],
-                "owner": i[1],
-                "lon": i[2],
-                "lat": i[3],
-                "pin": i[4],
-            })
+            j.append(
+                {
+                    "address": i[0],
+                    "owner": i[1],
+                    "lon": i[2],
+                    "lat": i[3],
+                    "pin": i[4],
+                }
+            )
         return ujson.dumps(j)
     else:
         return "[]"
@@ -165,4 +173,5 @@ def geocode():
 
 if __name__ == "__main__":
     from bottle import run
+
     run(application, host="0.0.0.0", port=env("PORT", 8080))
