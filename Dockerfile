@@ -19,11 +19,15 @@ RUN addgroup -g ${GID} appuser \
 # Install Python libs using Poetry.
 FROM builder_base AS python_libs_caddy
 # Add system dependencies required to use GDAL
+# Ref: https://stackoverflow.com/a/59040511/14508
 RUN apk add --no-cache \
   gdal \
   geos \
   proj \
-  binutils
+  binutils \
+  && ln -s /usr/lib/libproj.so.25 /usr/lib/libproj.so \
+  && ln -s /usr/lib/libgdal.so.35 /usr/lib/libgdal.so \
+  && ln -s /usr/lib/libgeos_c.so.1 /usr/lib/libgeos_c.so
 WORKDIR /app
 COPY poetry.lock pyproject.toml ./
 ARG POETRY_VERSION=1.8.3
