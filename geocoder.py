@@ -3,9 +3,9 @@ import os
 import re
 
 import ujson
-from bottle import Bottle, request, response, static_file
+from bottle import Bottle, HTTPResponse, request, response, static_file
 from sqlalchemy import create_engine
-from sqlalchemy.orm import scoped_session, sessionmaker
+from sqlalchemy.orm import sessionmaker
 from sqlalchemy.sql import text
 
 from caddy.utils import env
@@ -22,7 +22,7 @@ app = application = Bottle()
 # https://docs.sqlalchemy.org/en/20/orm/contextual.html#unitofwork-contextual
 database_url = env("DATABASE_URL").replace("postgis", "postgresql+psycopg")
 db_engine = create_engine(database_url)
-session = scoped_session(sessionmaker(bind=db_engine, autoflush=True))()
+Session = sessionmaker(bind=db_engine, autoflush=True)
 
 # Regex patterns
 LON_LAT_PATTERN = re.compile(r"(?P<lon>-?[0-9]+.[0-9]+),\s*(?P<lat>-?[0-9]+.[0-9]+)")
@@ -46,10 +46,12 @@ def liveness():
 
 @app.route("/readyz")
 def readiness():
-    result = session.execute(text("SELECT 1")).fetchone()
-
-    if result:
+    try:
+        with Session.begin() as session:
+            session.execute(text("SELECT 1")).fetchone()
         return "OK"
+    except:
+        return HTTPResponse(status=500, body="Error")
 
 
 @app.route("/api/<object_id>")
@@ -66,7 +68,8 @@ def detail(object_id):
                FROM shack_address
                WHERE object_id = :object_id""")
     sql = sql.bindparams(object_id=object_id)
-    result = session.execute(sql).fetchone()
+    with Session.begin() as session:
+        result = session.execute(sql).fetchone()
 
     if result:
         return ujson.dumps(
@@ -107,7 +110,8 @@ def geocode():
                        FROM shack_address
                        WHERE ST_Intersects(boundary, ST_GeomFromEWKT(:ewkt))""")
             sql = sql.bindparams(ewkt=ewkt)
-            result = session.execute(sql).fetchone()
+            with Session.begin() as session:
+                result = session.execute(sql).fetchone()
 
             # Serialise and return any query result.
             response.content_type = "application/json"
@@ -150,7 +154,8 @@ def geocode():
                WHERE tsv @@ to_tsquery(:tsquery)
                LIMIT :limit""")
     sql = sql.bindparams(tsquery=tsquery, limit=limit)
-    result = session.execute(sql).fetchall()
+    with Session.begin() as session:
+        result = session.execute(sql).fetchall()
 
     # Serialise and return any query results.
     response.content_type = "application/json"
