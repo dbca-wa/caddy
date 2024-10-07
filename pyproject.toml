@@ -15,7 +15,6 @@ dj-database-url = "2.2.0"
 django-extensions = "3.2.3"
 requests = "2.32.3"
 django-tastypie = "0.14.7"
-ujson = "5.10.0"
 bottle = "0.13.1"
 gunicorn = "23.0.0"
 mixer = "7.2.2"
@@ -23,11 +22,12 @@ webtest = "3.0.1"
 fudgeo = "0.8.0"
 sqlalchemy = "2.0.35"
 azure-storage-blob = "12.23.1"
+orjson = "3.10.7"
 
 [tool.poetry.group.dev.dependencies]
-ipython = "^8.27.0"
+ipython = "^8.28.0"
 ipdb = "^0.13.13"
-pre-commit = "^3.8.0"
+pre-commit = "^4.0.0"
 
 # Reference: https://docs.astral.sh/ruff/configuration/
 [tool.ruff]
