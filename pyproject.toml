@@ -27,7 +27,7 @@ azure-storage-blob = "12.23.1"
 [tool.poetry.group.dev.dependencies]
 ipython = "^8.27.0"
 ipdb = "^0.13.13"
-pre-commit = "^3.8.0"
+pre-commit = "^4.0.0"
 
 # Reference: https://docs.astral.sh/ruff/configuration/
 [tool.ruff]
