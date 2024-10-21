@@ -20,7 +20,7 @@ bottle = "0.13.1"
 gunicorn = "23.0.0"
 mixer = "7.2.2"
 webtest = "3.0.1"
-fudgeo = "0.8.0"
+fudgeo = "0.8.1"
 sqlalchemy = "2.0.35"
 azure-storage-blob = "12.23.1"
 
