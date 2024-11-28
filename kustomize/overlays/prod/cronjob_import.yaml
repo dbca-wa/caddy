@@ -13,51 +13,51 @@ spec:
         spec:
           restartPolicy: Never
           containers:
-          - name: caddy-import
-            image: ghcr.io/dbca-wa/caddy
-            command: ["python"]
-            args: ["manage.py", "import_cpt_cadastre_scdb"]
-            env:
-            - name: TZ
-              value: "Australia/Perth"
-            - name: DATABASE_URL
-              valueFrom:
-                secretKeyRef:
-                  name: caddy-env-prod
-                  key: DATABASE_URL
-            - name: AZURE_ACCOUNT_NAME
-              valueFrom:
-                secretKeyRef:
-                  name: caddy-env-prod
-                  key: AZURE_ACCOUNT_NAME
-            - name: AZURE_ACCOUNT_KEY
-              valueFrom:
-                secretKeyRef:
-                  name: caddy-env-prod
-                  key: AZURE_ACCOUNT_KEY
-            - name: AZURE_CONTAINER
-              valueFrom:
-                secretKeyRef:
-                  name: caddy-env-prod
-                  key: AZURE_CONTAINER
-            resources:
-              requests:
-                memory: "256Mi"
-                cpu: "10m"
-              limits:
-                memory: "2Gi"
-                cpu: "1000m"
-            securityContext:
-              runAsNonRoot: true
-              privileged: false
-              allowPrivilegeEscalation: false
-              capabilities:
-                drop:
-                  - ALL
-              readOnlyRootFilesystem: true
-            volumeMounts:
-              - mountPath: /tmp
-                name: tmpfs-ram
+            - name: caddy-import
+              image: ghcr.io/dbca-wa/caddy
+              command: ["python"]
+              args: ["manage.py", "import_cpt_cadastre_scdb"]
+              env:
+                - name: TZ
+                  value: "Australia/Perth"
+                - name: DATABASE_URL
+                  valueFrom:
+                    secretKeyRef:
+                      name: caddy-env-prod
+                      key: DATABASE_URL
+                - name: AZURE_ACCOUNT_NAME
+                  valueFrom:
+                    secretKeyRef:
+                      name: caddy-env-prod
+                      key: AZURE_ACCOUNT_NAME
+                - name: AZURE_ACCOUNT_KEY
+                  valueFrom:
+                    secretKeyRef:
+                      name: caddy-env-prod
+                      key: AZURE_ACCOUNT_KEY
+                - name: AZURE_CONTAINER
+                  valueFrom:
+                    secretKeyRef:
+                      name: caddy-env-prod
+                      key: AZURE_CONTAINER
+              resources:
+                requests:
+                  memory: "256Mi"
+                  cpu: "10m"
+                limits:
+                  memory: "2Gi"
+                  cpu: "1000m"
+              securityContext:
+                runAsNonRoot: true
+                privileged: false
+                allowPrivilegeEscalation: false
+                capabilities:
+                  drop:
+                    - ALL
+                readOnlyRootFilesystem: true
+              volumeMounts:
+                - mountPath: /tmp
+                  name: tmpfs-ram
           # Give the cronjob container an in-memory temp directory.
           volumes:
             - name: tmpfs-ram

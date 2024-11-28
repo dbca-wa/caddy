@@ -4,7 +4,7 @@ from django.contrib.gis.geos import GEOSGeometry, MultiPolygon, Point
 from django.db.migrations.operations.base import Operation
 from fudgeo.geopkg import GeoPackage
 import logging
-import ujson
+import orjson
 import os
 import re
 import requests
@@ -16,8 +16,8 @@ LOGGER = logging.getLogger("caddy")
 
 
 class LoadExtension(Operation):
-    """Class to assist with loading PostgreSQL extension during migrations.
-    """
+    """Class to assist with loading PostgreSQL extension during migrations."""
+
     reversible = True
 
     def __init__(self, name):
@@ -45,12 +45,14 @@ def geocode(query, limit=None):
     if limit:
         qs = qs[0:limit]
     for address in qs:
-        resp.append({
-            "address": address.address_nice,
-            "owner": address.owner,
-            "lon": address.centroid.x,
-            "lat": address.centroid.y
-        })
+        resp.append(
+            {
+                "address": address.address_nice,
+                "owner": address.owner,
+                "lon": address.centroid.x,
+                "lat": address.centroid.y,
+            }
+        )
     return resp
 
 
@@ -75,29 +77,29 @@ def harvest_cadastre_wfs(limit=None):
     total_features = r.json()["totalFeatures"]
     if limit and limit < total_features:  # Optional limit on total features imported.
         total_features = limit
-    params['maxFeatures'] = 1000
-    if limit and limit < params['maxFeatures']:
-        params['maxFeatures'] = limit
-    for i in range(0, total_features, params['maxFeatures']):
+    params["maxFeatures"] = 1000
+    if limit and limit < params["maxFeatures"]:
+        params["maxFeatures"] = limit
+    for i in range(0, total_features, params["maxFeatures"]):
         LOGGER.info(f"Querying features {i} to {i + params['maxFeatures']}")
         # Query the server for features, using startIndex.
-        params['startIndex'] = i
+        params["startIndex"] = i
         r = requests.get(url=GEOSERVER_URL, auth=auth, params=params)
         j = r.json()
         create_features = []
         updates = 0
         suspect = 0
         skipped = 0
-        for f in j['features']:
+        for f in j["features"]:
             #  Query for an existing feature (PIN == object_id)
-            if Address.objects.filter(object_id=f['properties']['cad_pin']).exists():
-                add = Address.objects.get(object_id=f['properties']['cad_pin'])
+            if Address.objects.filter(object_id=f["properties"]["cad_pin"]).exists():
+                add = Address.objects.get(object_id=f["properties"]["cad_pin"])
                 add.data = {}
                 update = True  # Existing feature
             else:
-                add = Address(object_id=f['properties']['cad_pin'])
+                add = Address(object_id=f["properties"]["cad_pin"])
                 update = False  # New feature
-            poly = GEOSGeometry(ujson.dumps(f['geometry']))
+            poly = GEOSGeometry(orjson.dumps(f["geometry"]))
             # Edge case: sometimes features are returned as MultiPolygon.
             # If the feature is a MP containing one polygon feature, use that.
             # Otherwise, skip the feature entirely.
@@ -115,36 +117,36 @@ def harvest_cadastre_wfs(limit=None):
                 suspect += 1
             else:
                 add.envelope = poly.envelope  # Simplify the geometry bounds.
-            prop = f['properties']
-            address_nice = ''  # Human-readable "nice" address.
-            if 'cad_lot_number' in prop and prop['cad_lot_number']:
-                add.data['lot_number'] = prop['cad_lot_number']
-                address_nice += '(Lot {}) '.format(prop['cad_lot_number'])
-            if 'cad_house_number' in prop and prop['cad_house_number']:
-                add.data['house_number'] = prop['cad_house_number']
-                address_nice += '{} '.format(prop['cad_house_number'])
-            if 'cad_road_name' in prop and prop['cad_road_name']:
-                add.data['road_name'] = prop['cad_road_name']
-                address_nice += '{} '.format(prop['cad_road_name'])
-                if 'cad_road_type' in prop and prop['cad_road_type']:
-                    add.data['road_type'] = prop['cad_road_type']
+            prop = f["properties"]
+            address_nice = ""  # Human-readable "nice" address.
+            if "cad_lot_number" in prop and prop["cad_lot_number"]:
+                add.data["lot_number"] = prop["cad_lot_number"]
+                address_nice += "(Lot {}) ".format(prop["cad_lot_number"])
+            if "cad_house_number" in prop and prop["cad_house_number"]:
+                add.data["house_number"] = prop["cad_house_number"]
+                address_nice += "{} ".format(prop["cad_house_number"])
+            if "cad_road_name" in prop and prop["cad_road_name"]:
+                add.data["road_name"] = prop["cad_road_name"]
+                address_nice += "{} ".format(prop["cad_road_name"])
+                if "cad_road_type" in prop and prop["cad_road_type"]:
+                    add.data["road_type"] = prop["cad_road_type"]
                     # Try to match an existing suffix.
-                    if prop['cad_road_type'] in ROADS_ABBREV:
-                        address_nice += '{} '.format(ROADS_ABBREV[prop['cad_road_type']])
+                    if prop["cad_road_type"] in ROADS_ABBREV:
+                        address_nice += "{} ".format(ROADS_ABBREV[prop["cad_road_type"]])
                     else:
-                        address_nice += '{} '.format(prop['cad_road_type'])
-            if 'cad_locality' in prop and prop['cad_locality']:
-                add.data['locality'] = prop['cad_locality']
-                address_nice += '{} '.format(prop['cad_locality'])
-            if 'cad_postcode' in prop and prop['cad_postcode']:
-                add.data['postcode'] = prop['cad_postcode']
-                address_nice += '{} '.format(prop['cad_postcode'])
-            if 'cad_owner_name' in prop and prop['cad_owner_name']:
-                add.owner = prop['cad_owner_name']
-            if 'cad_ownership' in prop and prop['cad_ownership']:
-                add.data['ownership'] = prop['cad_ownership']
-            if 'cad_pin' in prop and prop['cad_pin']:
-                add.data['pin'] = prop['cad_pin']
+                        address_nice += "{} ".format(prop["cad_road_type"])
+            if "cad_locality" in prop and prop["cad_locality"]:
+                add.data["locality"] = prop["cad_locality"]
+                address_nice += "{} ".format(prop["cad_locality"])
+            if "cad_postcode" in prop and prop["cad_postcode"]:
+                add.data["postcode"] = prop["cad_postcode"]
+                address_nice += "{} ".format(prop["cad_postcode"])
+            if "cad_owner_name" in prop and prop["cad_owner_name"]:
+                add.owner = prop["cad_owner_name"]
+            if "cad_ownership" in prop and prop["cad_ownership"]:
+                add.data["ownership"] = prop["cad_ownership"]
+            if "cad_pin" in prop and prop["cad_pin"]:
+                add.data["pin"] = prop["cad_pin"]
             add.address_nice = address_nice.strip()
             add.address_text = add.get_address_text()
             if update:  # Save changes to existing features.
@@ -155,7 +157,9 @@ def harvest_cadastre_wfs(limit=None):
 
         # Do a bulk_create for each iteration (new features only).
         Address.objects.bulk_create(create_features)
-        LOGGER.info(f'Created {len(create_features)} addresses, updated {updates}, skipped {skipped}, suspect {suspect}')
+        LOGGER.info(
+            f"Created {len(create_features)} addresses, updated {updates}, skipped {skipped}, suspect {suspect}"
+        )
 
 
 # Schema: https://kaartdijin-boodja.dbca.wa.gov.au/catalogue/entries/54/attribute/
@@ -203,8 +207,7 @@ CPT_CADASTRE_SCDB_SCHEMA = (
 
 
 def import_cpt_cadastre_scdb(blob_name=None):
-    """Function to import CPT_CADASTRE_SCDB.gpkg from blob store.
-    """
+    """Function to import CPT_CADASTRE_SCDB.gpkg from blob store."""
     if not blob_name:
         return
 

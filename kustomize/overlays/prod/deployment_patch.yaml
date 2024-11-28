@@ -2,28 +2,20 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: caddy-deployment
-  labels:
-    app: caddy-deployment
 spec:
-  selector:
-    matchLabels:
-      app: caddy-deployment
   template:
-    metadata:
-      labels:
-        app: caddy-deployment
     spec:
       containers:
-      - name: caddy
-        imagePullPolicy: IfNotPresent
-        env:
-        - name: DATABASE_URL
-          valueFrom:
-            secretKeyRef:
-              name: caddy-env-prod
-              key: DATABASE_URL
-        - name: SECRET_KEY
-          valueFrom:
-            secretKeyRef:
-              name: caddy-env-prod
-              key: SECRET_KEY
+        - name: caddy
+          imagePullPolicy: IfNotPresent
+          env:
+            - name: DATABASE_URL
+              valueFrom:
+                secretKeyRef:
+                  name: caddy-env-prod
+                  key: DATABASE_URL
+            - name: SECRET_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: caddy-env-prod
+                  key: SECRET_KEY

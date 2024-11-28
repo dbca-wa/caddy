@@ -9,7 +9,9 @@ secretGenerator:
   - name: caddy-env
     type: Opaque
     envs:
-    - .env
+      - .env
+generatorOptions:
+  disableNameSuffixHash: true
 labels:
   - includeSelectors: true
     pairs:

@@ -2,7 +2,7 @@
 import os
 import re
 
-import ujson
+import orjson
 from bottle import Bottle, HTTPResponse, request, response, static_file
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
@@ -72,7 +72,7 @@ def detail(object_id):
         result = session.execute(sql).fetchone()
 
     if result:
-        return ujson.dumps(
+        return orjson.dumps(
             {
                 "object_id": result[0],
                 "address": result[1],
@@ -116,7 +116,7 @@ def geocode():
             # Serialise and return any query result.
             response.content_type = "application/json"
             if result:
-                return ujson.dumps(
+                return orjson.dumps(
                     {
                         "object_id": result[0],
                         "address": result[1],
@@ -171,7 +171,7 @@ def geocode():
                     "pin": i[4],
                 }
             )
-        return ujson.dumps(j)
+        return orjson.dumps(j)
     else:
         return "[]"
 

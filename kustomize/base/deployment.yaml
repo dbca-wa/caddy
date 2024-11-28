@@ -2,64 +2,72 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: caddy-deployment
+  labels:
+    app: caddy-deployment
 spec:
+  selector:
+    matchLabels:
+      app: caddy-deployment
   strategy:
     type: RollingUpdate
   template:
+    metadata:
+      labels:
+        app: caddy-deployment
     spec:
       containers:
-      - name: caddy
-        image: ghcr.io/dbca-wa/caddy
-        imagePullPolicy: Always
-        env:
-        - name: ALLOWED_HOSTS
-          value: ".dbca.wa.gov.au"
-        - name: TZ
-          value: "Australia/Perth"
-        resources:
-          requests:
-            memory: "100Mi"
-            cpu: "5m"
-          limits:
-            memory: "2Gi"
-            cpu: "1000m"
-        startupProbe:
-          httpGet:
-            path: /livez
-            port: 8080
-            scheme: HTTP
-          initialDelaySeconds: 3
-          periodSeconds: 15
-          timeoutSeconds: 10
-          successThreshold: 1
-          failureThreshold: 3
-        livenessProbe:
-          httpGet:
-            path: /livez
-            port: 8080
-            scheme: HTTP
-          initialDelaySeconds: 0
-          periodSeconds: 15
-          successThreshold: 1
-          failureThreshold: 3
-          timeoutSeconds: 10
-        readinessProbe:
-          httpGet:
-            path: /readyz
-            port: 8080
-            scheme: HTTP
-          initialDelaySeconds: 0
-          periodSeconds: 15
-          successThreshold: 1
-          failureThreshold: 3
-          timeoutSeconds: 10
-        securityContext:
-          runAsNonRoot: true
-          privileged: false
-          allowPrivilegeEscalation: false
-          capabilities:
-            drop:
-              - ALL
-          readOnlyRootFilesystem: false
+        - name: caddy
+          image: ghcr.io/dbca-wa/caddy
+          imagePullPolicy: Always
+          env:
+            - name: ALLOWED_HOSTS
+              value: ".dbca.wa.gov.au"
+            - name: TZ
+              value: "Australia/Perth"
+          resources:
+            requests:
+              memory: "100Mi"
+              cpu: "5m"
+            limits:
+              memory: "2Gi"
+              cpu: "1000m"
+          startupProbe:
+            httpGet:
+              path: /livez
+              port: 8080
+              scheme: HTTP
+            initialDelaySeconds: 3
+            periodSeconds: 15
+            timeoutSeconds: 10
+            successThreshold: 1
+            failureThreshold: 3
+          livenessProbe:
+            httpGet:
+              path: /livez
+              port: 8080
+              scheme: HTTP
+            initialDelaySeconds: 0
+            periodSeconds: 15
+            successThreshold: 1
+            failureThreshold: 3
+            timeoutSeconds: 10
+          readinessProbe:
+            httpGet:
+              path: /readyz
+              port: 8080
+              scheme: HTTP
+            initialDelaySeconds: 0
+            periodSeconds: 15
+            successThreshold: 1
+            failureThreshold: 3
+            timeoutSeconds: 10
+          securityContext:
+            runAsNonRoot: true
+            privileged: false
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
+            readOnlyRootFilesystem: false
       restartPolicy: Always
       terminationGracePeriodSeconds: 180
