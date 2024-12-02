@@ -24,7 +24,7 @@ azure-storage-blob = "12.23.1"
 orjson = "3.10.12"
 
 [tool.poetry.group.dev.dependencies]
-ipython = "^8.29.0"
+ipython = "^8.30.0"
 ipdb = "^0.13.13"
 pre-commit = "^4.0.1"
 
