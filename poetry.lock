@@ -483,12 +483,12 @@ Django = ">=3.2"
 
 [[package]]
 name = "django-tastypie"
-version = "0.14.7"
+version = "0.15.0"
 description = "A flexible & capable API layer for Django."
 optional = false
 python-versions = "*"
 files = [
-    {file = "django-tastypie-0.14.7.tar.gz", hash = "sha256:5769e997d66726babb0cbb7643ff278b994b8ca775c5a4c510dfa0f386567d50"},
+    {file = "django_tastypie-0.15.0.tar.gz", hash = "sha256:baddce528e53646ee400e7c2dbee9a7c61b98a9fb67c8be2c3cf0f70eb10aa3c"},
 ]
 
 [package.dependencies]
@@ -1565,4 +1565,4 @@ files = [
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.12"
-content-hash = "e8bc43a364bccaa898a7837aa53060754c84d593d61ef8409e3f5fe2edc6228e"
+content-hash = "ac4336c98b5fee14b9675f5850d8b7c86ac200de114109bf842ea530cd34719b"
