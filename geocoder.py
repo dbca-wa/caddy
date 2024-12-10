@@ -162,7 +162,7 @@ def geocode():
     else:
         limit = 5
 
-    sql = text("""SELECT address_nice, owner, ST_X(centroid), ST_Y(centroid), object_id
+    sql = text("""SELECT object_id, address_nice, owner, ST_X(centroid), ST_Y(centroid)
                FROM shack_address
                WHERE tsv @@ to_tsquery(:tsquery)
                LIMIT :limit""")
@@ -177,11 +177,11 @@ def geocode():
         for i in result:
             j.append(
                 {
-                    "address": i[0],
-                    "owner": i[1],
-                    "lon": i[2],
-                    "lat": i[3],
-                    "pin": i[4],
+                    "object_id": i[0],
+                    "address": i[1],
+                    "owner": i[2],
+                    "lon": i[3],
+                    "lat": i[4],
                 }
             )
         return orjson.dumps(j)
