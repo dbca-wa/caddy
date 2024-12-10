@@ -56,7 +56,8 @@ def readiness():
 
 @app.route("/api/<object_id>")
 def detail(object_id):
-    # Validate `object_id`: this value needs be castable as an integer, even though we use it as a string.
+    """This route will return details of a single land parcel, serialised as a JSON object."""
+    # Validate `object_id`: this value needs be castable as an integer, even though we handle it as a string.
     try:
         int(object_id)
     except ValueError:
@@ -89,6 +90,16 @@ def detail(object_id):
 
 @app.route("/api/geocode")
 def geocode():
+    """This route will accept a query parameter (`q` or `point`), and query for matching land parcels.
+    `point` must be a string that parses as <float>,<float> and will be used to query for intersection with the `boundary`
+    spatial column.
+    `q` will be parsed as free text (non-alphanumeric characters will be ignored) and will be used to perform a text search
+    against the `tsv` column.
+    Query results will be returned as serialised JSON objects.
+    An optional `limit` parameter may be passed in to limit the maximum number of results returned, otherwise the route
+    defaults to a maximum of five results (no sorting is carried out, so these are simply the first five results from the
+    query.
+    """
     q = request.query.q or ""
     point = request.query.point or ""
     if not q and not point:
@@ -104,7 +115,9 @@ def geocode():
             try:
                 lon, lat = float(lon), float(lat)
             except ValueError:
-                return "{}"
+                response.status = 400
+                return "Bad request"
+
             ewkt = f"SRID=4326;POINT({lon} {lat})"
             sql = text("""SELECT object_id, address_nice, owner, ST_AsText(centroid), ST_AsText(envelope), ST_AsText(boundary), data
                        FROM shack_address
@@ -149,7 +162,7 @@ def geocode():
     else:
         limit = 5
 
-    sql = text("""SELECT address_nice, owner, ST_X(centroid), ST_Y(centroid), object_id
+    sql = text("""SELECT object_id, address_nice, owner, ST_X(centroid), ST_Y(centroid)
                FROM shack_address
                WHERE tsv @@ to_tsquery(:tsquery)
                LIMIT :limit""")
@@ -164,11 +177,11 @@ def geocode():
         for i in result:
             j.append(
                 {
-                    "address": i[0],
-                    "owner": i[1],
-                    "lon": i[2],
-                    "lat": i[3],
-                    "pin": i[4],
+                    "object_id": i[0],
+                    "address": i[1],
+                    "owner": i[2],
+                    "lon": i[3],
+                    "lat": i[4],
                 }
             )
         return orjson.dumps(j)

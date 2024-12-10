@@ -1,14 +1,15 @@
+import logging
+import os
+import re
+from tempfile import NamedTemporaryFile
+
+import orjson
+import requests
 from azure.storage.blob import BlobClient
 from django.conf import settings
 from django.contrib.gis.geos import GEOSGeometry, MultiPolygon, Point
 from django.db.migrations.operations.base import Operation
 from fudgeo.geopkg import GeoPackage
-import logging
-import orjson
-import os
-import re
-import requests
-from tempfile import NamedTemporaryFile
 
 from .models import Address
 
@@ -47,6 +48,7 @@ def geocode(query, limit=None):
     for address in qs:
         resp.append(
             {
+                "object_id": address.object_id,
                 "address": address.address_nice,
                 "owner": address.owner,
                 "lon": address.centroid.x,
