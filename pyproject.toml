@@ -22,10 +22,10 @@ fudgeo = "0.8.1"
 sqlalchemy = "2.0.36"
 azure-storage-blob = "12.24.0"
 orjson = "3.10.12"
-ipython = "^8.30.0"
+ipython = "^8.31.0"
 
 [tool.poetry.group.dev.dependencies]
-ipython = "^8.29.0"
+ipython = "^8.31.0"
 ipdb = "^0.13.13"
 pre-commit = "^4.0.1"
 
