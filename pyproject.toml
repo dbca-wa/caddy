@@ -21,7 +21,7 @@ mixer = "7.2.2"
 fudgeo = "0.8.1"
 sqlalchemy = "2.0.36"
 azure-storage-blob = "12.24.0"
-orjson = "3.10.12"
+orjson = "3.10.13"
 ipython = "^8.30.0"
 
 [tool.poetry.group.dev.dependencies]
