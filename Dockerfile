@@ -21,6 +21,10 @@ COPY --from=ghcr.io/astral-sh/uv:0.6 /uv /uvx /bin/
 # The trailing slash makes COPY create `/_lock/` automagically.
 COPY pyproject.toml uv.lock /_lock/
 
+# Install OS requirements to build packages.
+RUN apt-get update -y \
+  && apt-get install -y gcc
+
 # Synchronize dependencies.
 # This layer is cached until uv.lock or pyproject.toml change.
 RUN --mount=type=cache,target=/root/.cache \
@@ -38,7 +42,7 @@ LABEL org.opencontainers.image.source=https://github.com/dbca-wa/caddy
 # Install OS packages
 RUN apt-get update -y \
   && apt-get upgrade -y \
-  && apt-get install -y gdal-bin proj-bin gcc binutils \
+  && apt-get install -y gdal-bin proj-bin \
   && rm -rf /var/lib/apt/lists/*
 
 # Create a non-root user.
