@@ -38,7 +38,7 @@ LABEL org.opencontainers.image.source=https://github.com/dbca-wa/caddy
 # Install OS packages
 RUN apt-get update -y \
   && apt-get upgrade -y \
-  && apt-get install -y gdal-bin proj-bin \
+  && apt-get install -y gdal-bin proj-bin gcc binutils \
   && rm -rf /var/lib/apt/lists/*
 
 # Create a non-root user.
