@@ -6,7 +6,7 @@ authors = [{ name = "Ashley Felton", email = "ashley.felton@dbca.wa.gov.au" }]
 license = "Apache-2.0"
 requires-python = ">=3.12,<4.0"
 dependencies = [
-  "django==4.2.18",
+  "django==4.2.20",
   "psycopg[binary,pool]==3.2.6",
   "python-dotenv==1.0.1",
   "dj-database-url == 2.3.0",
@@ -17,7 +17,7 @@ dependencies = [
   "gunicorn == 23.0.0",
   "fudgeo==0.8.2",
   "sqlalchemy==2.0.39",
-  "azure-storage-blob==12.24.1",
+  "azure-storage-blob==12.25.0",
   "orjson==3.10.15",
 ]
 

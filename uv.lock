@@ -40,7 +40,7 @@ wheels = [
 
 [[package]]
 name = "azure-storage-blob"
-version = "12.24.1"
+version = "12.25.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "azure-core" },
@@ -48,9 +48,9 @@ dependencies = [
     { name = "isodate" },
     { name = "typing-extensions" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/aa/ff/f6e81d15687510d83a06cafba9ac38d17df71a2bb18f35a0fb169aee3af3/azure_storage_blob-12.24.1.tar.gz", hash = "sha256:052b2a1ea41725ba12e2f4f17be85a54df1129e13ea0321f5a2fcc851cbf47d4", size = 570523 }
+sdist = { url = "https://files.pythonhosted.org/packages/8a/a6/343e225ffd1c27971fa3059b8bbb90088042ff9a41f631fdf2f9df4f190e/azure_storage_blob-12.25.0.tar.gz", hash = "sha256:42364ca8f9f49dbccd0acc10144ed47bb6770bf78719970b51915f048891abba", size = 570274 }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/74/3c/3814aba90a63e84c7de0eb6fdf67bd1a9115ac5f99ec5b7a817a5d5278ec/azure_storage_blob-12.24.1-py3-none-any.whl", hash = "sha256:77fb823fdbac7f3c11f7d86a5892e2f85e161e8440a7489babe2195bf248f09e", size = 408432 },
+    { url = "https://files.pythonhosted.org/packages/8a/90/b2bb0c338a486e62428d5126236d09e03e890f59c4939292e13ee57e5007/azure_storage_blob-12.25.0-py3-none-any.whl", hash = "sha256:a38e18bf10258fb19028f343db0d3d373280c6427a619c98c06d76485805b755", size = 406921 },
 ]
 
 [[package]]
@@ -102,7 +102,7 @@ wheels = [
 
 [[package]]
 name = "caddy"
-version = "2.3.12"
+version = "2.3.13"
 source = { virtual = "." }
 dependencies = [
     { name = "azure-storage-blob" },
@@ -131,10 +131,10 @@ dev = [
 
 [package.metadata]
 requires-dist = [
-    { name = "azure-storage-blob", specifier = "==12.24.1" },
+    { name = "azure-storage-blob", specifier = "==12.25.0" },
     { name = "bottle", specifier = "==0.13.2" },
     { name = "dj-database-url", specifier = "==2.3.0" },
-    { name = "django", specifier = "==4.2.18" },
+    { name = "django", specifier = "==4.2.20" },
     { name = "django-extensions", specifier = "==3.2.3" },
     { name = "django-tastypie", specifier = "==0.15.1" },
     { name = "fudgeo", specifier = "==0.8.2" },
@@ -318,16 +318,16 @@ wheels = [
 
 [[package]]
 name = "django"
-version = "4.2.18"
+version = "4.2.20"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "asgiref" },
     { name = "sqlparse" },
     { name = "tzdata", marker = "sys_platform == 'win32'" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/1c/82/470d12df22d7b56b12812539ce7bed332d8cfda51a657ab2b59f3390cae3/Django-4.2.18.tar.gz", hash = "sha256:52ae8eacf635617c0f13b44f749e5ea13dc34262819b2cc8c8636abb08d82c4b", size = 10428204 }
+sdist = { url = "https://files.pythonhosted.org/packages/0a/dd/33d2a11713f6b78493273a32d99bb449f2d93663ed4ec15a8b890d44ba04/Django-4.2.20.tar.gz", hash = "sha256:92bac5b4432a64532abb73b2ac27203f485e40225d2640a7fbef2b62b876e789", size = 10432686 }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/93/76/39c641b5787e5e61f35b9d29c6f19bf94506bf7be3e48249f72233c4625d/Django-4.2.18-py3-none-any.whl", hash = "sha256:ba52eff7e228f1c775d5b0db2ba53d8c49d2f8bfe6ca0234df6b7dd12fb25b19", size = 7993633 },
+    { url = "https://files.pythonhosted.org/packages/b3/5d/7571ba1c288ead056dda7adad46b25cbf64790576f095565282e996138b1/Django-4.2.20-py3-none-any.whl", hash = "sha256:213381b6e4405f5c8703fffc29cd719efdf189dec60c67c04f76272b3dc845b9", size = 7993584 },
 ]
 
 [[package]]
