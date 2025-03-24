@@ -13,6 +13,7 @@ jobs:
     name: Run Django Tests
     runs-on: ubuntu-latest
     env:
+      DATABASE_URL: postgis://postgres:postgres@localhost:5432/postgres
       TEST_DATABASE_URL: postgis://postgres:postgres@localhost:5432/postgres
     services:
       postgres:
