@@ -4,7 +4,7 @@ metadata:
   name: caddy-cronjob-import
 spec:
   # AWST: 23:11 on day 11, every third month
-  schedule: "11 12 11 */3 *"
+  schedule: '11 12 11 */3 *'
   concurrencyPolicy: Forbid
   jobTemplate:
     spec:
@@ -15,11 +15,11 @@ spec:
           containers:
             - name: caddy-import
               image: ghcr.io/dbca-wa/caddy
-              command: ["python"]
-              args: ["manage.py", "import_cpt_cadastre_scdb"]
+              command: ['python']
+              args: ['manage.py', 'import_cpt_cadastre_scdb']
               env:
                 - name: TZ
-                  value: "Australia/Perth"
+                  value: 'Australia/Perth'
                 - name: DATABASE_URL
                   valueFrom:
                     secretKeyRef:
@@ -42,11 +42,11 @@ spec:
                       key: AZURE_CONTAINER
               resources:
                 requests:
-                  memory: "256Mi"
-                  cpu: "10m"
+                  memory: '256Mi'
+                  cpu: '10m'
                 limits:
-                  memory: "2Gi"
-                  cpu: "1000m"
+                  memory: '2Gi'
+                  cpu: '1000m'
               securityContext:
                 runAsNonRoot: true
                 privileged: false
@@ -62,4 +62,4 @@ spec:
           volumes:
             - name: tmpfs-ram
               emptyDir:
-                medium: "Memory"
+                medium: 'Memory'
