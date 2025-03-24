@@ -9,6 +9,9 @@ values in the format KEY=value (i.e. `overlays/uat/.env`). Required values:
 
     DATABASE_URL=value
     SECRET_KEY=value
+    AZURE_ACCOUNT_NAME=azureaccountname
+    AZURE_ACCOUNT_KEY=azureaccountsecret
+    AZURE_CONTAINER=containername
 
 Review the built resource output using `kustomize`:
 

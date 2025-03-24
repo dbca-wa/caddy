@@ -20,7 +20,10 @@ app = application = Bottle()
 
 # Database connection - create a DB engine and a scoped session for queries.
 # https://docs.sqlalchemy.org/en/20/orm/contextual.html#unitofwork-contextual
-database_url = env("DATABASE_URL").replace("postgis", "postgresql+psycopg")
+if "TEST_DATABASE_URL" in os.environ and env("TEST_DATABASE_URL"):
+    database_url = env("TEST_DATABASE_URL").replace("postgis", "postgresql+psycopg")
+else:
+    database_url = env("DATABASE_URL").replace("postgis", "postgresql+psycopg")
 db_engine = create_engine(database_url)
 Session = sessionmaker(bind=db_engine, autoflush=True)
 

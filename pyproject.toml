@@ -1,37 +1,39 @@
-[tool.poetry]
+[project]
 name = "caddy"
-version = "2.3.12"
+version = "2.3.13"
 description = "Lightweight application service to harvest and index the cadastre dataset, and expose an API endpoint to allow full-text searching of addresses."
-authors = ["Ashley Felton <ashley.felton@dbca.wa.gov.au>"]
-license = "Apache License 2.0"
-package-mode = false
+authors = [{ name = "Ashley Felton", email = "ashley.felton@dbca.wa.gov.au" }]
+license = "Apache-2.0"
+requires-python = ">=3.12,<4.0"
+dependencies = [
+  "django==4.2.20",
+  "psycopg[binary,pool]==3.2.6",
+  "python-dotenv==1.0.1",
+  "dj-database-url == 2.3.0",
+  "django-extensions==3.2.3",
+  "requests==2.32.3",
+  "django-tastypie==0.15.1",
+  "bottle==0.13.2",
+  "gunicorn == 23.0.0",
+  "fudgeo==0.8.2",
+  "sqlalchemy==2.0.39",
+  "azure-storage-blob==12.25.0",
+  "orjson==3.10.15",
+]
 
-[tool.poetry.dependencies]
-python = "^3.12"
-django = "4.2.17"
-psycopg = { version = "3.2.3", extras = ["binary", "pool"] }
-python-dotenv = "1.0.1"
-dj-database-url = "2.3.0"
-django-extensions = "3.2.3"
-requests = "2.32.3"
-django-tastypie = "0.15.0"
-bottle = "0.13.2"
-gunicorn = "23.0.0"
-mixer = "7.2.2"
-fudgeo = "0.8.1"
-sqlalchemy = "2.0.36"
-azure-storage-blob = "12.24.0"
-orjson = "3.10.12"
-ipython = "^8.30.0"
-
-[tool.poetry.group.dev.dependencies]
-ipython = "^8.29.0"
-ipdb = "^0.13.13"
-pre-commit = "^4.0.1"
+[dependency-groups]
+dev = [
+  "ipython>=8.31.0",
+  "ipdb>=0.13.13",
+  "mixer>=7.2.2",
+  "pre-commit>=4.1.0",
+  "webtest>=3.0.4",
+]
 
 # Reference: https://docs.astral.sh/ruff/configuration/
 [tool.ruff]
 line-length = 120
+indent-width = 4
 
 [tool.ruff.lint]
 ignore = [
@@ -42,7 +44,3 @@ ignore = [
 # Reference: https://www.djlint.com/docs/configuration/
 [tool.djlint]
 profile = "django"
-
-[build-system]
-requires = ["poetry-core"]
-build-backend = "poetry.masonry.api"
