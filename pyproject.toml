@@ -10,7 +10,7 @@ dependencies = [
   "psycopg[binary,pool]==3.2.6",
   "python-dotenv==1.0.1",
   "dj-database-url == 2.3.0",
-  "django-extensions==3.2.3",
+  "django-extensions==4.1",
   "requests==2.32.3",
   "django-tastypie==0.15.1",
   "bottle==0.13.2",
