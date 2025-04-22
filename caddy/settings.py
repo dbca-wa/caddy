@@ -46,7 +46,6 @@ INSTALLED_APPS = (
     "django.contrib.gis",
     "django.contrib.postgres",
     "django_extensions",
-    "tastypie",
     "shack",
 )
 MIDDLEWARE = [
@@ -83,17 +82,12 @@ DATABASES = {
 LANGUAGE_CODE = "en-us"
 TIME_ZONE = "Australia/Perth"
 USE_I18N = False
-USE_L10N = True
 USE_TZ = True
 
 
 # Static files (CSS, JavaScript, Images)
 STATIC_URL = "/static/"
 STATIC_ROOT = os.path.join(BASE_DIR, "staticfiles")
-
-
-# Tastypie settings
-TASTYPIE_DEFAULT_FORMATS = ["json", "jsonp"]
 
 
 # Logging settings

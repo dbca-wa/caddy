@@ -110,7 +110,6 @@ dependencies = [
     { name = "dj-database-url" },
     { name = "django" },
     { name = "django-extensions" },
-    { name = "django-tastypie" },
     { name = "fudgeo" },
     { name = "gunicorn" },
     { name = "orjson" },
@@ -136,7 +135,6 @@ requires-dist = [
     { name = "dj-database-url", specifier = "==2.3.0" },
     { name = "django", specifier = "==4.2.20" },
     { name = "django-extensions", specifier = "==3.2.3" },
-    { name = "django-tastypie", specifier = "==0.15.1" },
     { name = "fudgeo", specifier = "==0.8.2" },
     { name = "gunicorn", specifier = "==23.0.0" },
     { name = "orjson", specifier = "==3.10.16" },
@@ -341,16 +339,6 @@ sdist = { url = "https://files.pythonhosted.org/packages/8a/f1/318684c9466968bf9
 wheels = [
     { url = "https://files.pythonhosted.org/packages/a7/7e/ba12b9660642663f5273141018d2bec0a1cae1711f4f6d1093920e157946/django_extensions-3.2.3-py3-none-any.whl", hash = "sha256:9600b7562f79a92cbf1fde6403c04fee314608fefbb595502e34383ae8203401", size = 229868 },
 ]
-
-[[package]]
-name = "django-tastypie"
-version = "0.15.1"
-source = { registry = "https://pypi.org/simple" }
-dependencies = [
-    { name = "python-dateutil" },
-    { name = "python-mimeparse" },
-]
-sdist = { url = "https://files.pythonhosted.org/packages/d8/96/2e27e872d34f360ac6d02077b0027f4851b6cf049b36ee3add68e1740c27/django_tastypie-0.15.1.tar.gz", hash = "sha256:1eb41318b08c0ebc9b8a386871b45401a623e6a5566bf32ae3e17be2c59318b7", size = 156617 }
 
 [[package]]
 name = "executing"
@@ -824,15 +812,6 @@ source = { registry = "https://pypi.org/simple" }
 sdist = { url = "https://files.pythonhosted.org/packages/bc/57/e84d88dfe0aec03b7a2d4327012c1627ab5f03652216c63d49846d7a6c58/python-dotenv-1.0.1.tar.gz", hash = "sha256:e324ee90a023d808f1959c46bcbc04446a10ced277783dc6ee09987c37ec10ca", size = 39115 }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/6a/3e/b68c118422ec867fa7ab88444e1274aa40681c606d59ac27de5a5588f082/python_dotenv-1.0.1-py3-none-any.whl", hash = "sha256:f7b63ef50f1b690dddf550d03497b66d609393b40b564ed0d674909a68ebf16a", size = 19863 },
-]
-
-[[package]]
-name = "python-mimeparse"
-version = "2.0.0"
-source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/cd/85/c40f2e0b2128905f6c34894be01803c114f2b2efab0e8b4c3dca5e56b999/python_mimeparse-2.0.0.tar.gz", hash = "sha256:5b9a9dcf7aa82465e31bd667f5cb7000604811dce83554f1c8a43693a32cb303", size = 7162 }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/65/d9/1093a9d6d22d04d433003c96b9b1d46741b43fee5b11ece5098297737fce/python_mimeparse-2.0.0-py3-none-any.whl", hash = "sha256:574062a06f2e1d416535c8d3b83ccc6ebe95941e74e2c5939fc010a12e37cc09", size = 5576 },
 ]
 
 [[package]]
