@@ -50,6 +50,14 @@ Run Django console commands manually:
 
     python manage.py shell_plus
 
+## Testing
+
+Uncomment the `TEST_DATABASE_URL` value to run unit tests:
+
+    python manage.py test --keepdb -v2
+
+Comment this again to use `runserver`.
+
 ## Background
 
 The **shack** application contains a single model, **Address**. This model
