@@ -1,3 +1,5 @@
+import random
+
 from django.contrib.gis.geos import Point
 from django.test import TransactionTestCase
 from mixer.backend.django import mixer
@@ -21,16 +23,17 @@ class GeocoderTestCase(TransactionTestCase):
 
     def setUp(self):
         # Generate an Address object to test geocoding.
+        object_id = random.randint(1, 1000000)
         self.address = mixer.blend(
             Address,
-            object_id=1,
+            object_id=object_id,
             address_nice="(Lot 442) 182 NORTHSTEAD ST SCARBOROUGH 6019",
             centroid="POINT(115.77111018362386 -31.897899253237053)",
             envelope="POLYGON((115.77102292300003 -31.89798640099997,115.77119745000005 -31.89798640099997,115.77119745000005 -31.897812103999968,115.77102292300003 -31.897812103999968,115.77102292300003 -31.89798640099997))",
             boundary="POLYGON((115.77102292300003 -31.89798640099997,115.77102437400004 -31.897812298999952,115.7710375040001 -31.897812280999972,115.77111097400007 -31.897812192999936,115.77119745000005 -31.897812103999968,115.77119598200011 -31.897986223999965,115.77102292300003 -31.89798640099997))",
             data={
                 "survey_lot": "LOT 442 ON PLAN 3697",
-                "pin": 1,
+                "pin": object_id,
                 "postcode": "6019",
                 "addrs_no": "182",
                 "road_sfx": "ST",
