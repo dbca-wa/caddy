@@ -52,6 +52,7 @@ def readiness():
     try:
         with Session.begin() as session:
             session.execute(text("SELECT 1")).fetchone()
+            session.close()
         return "OK"
     except:
         return HTTPResponse(status=500, body="Error")
@@ -74,6 +75,7 @@ def detail(object_id):
     sql = sql.bindparams(object_id=object_id)
     with Session.begin() as session:
         result = session.execute(sql).fetchone()
+        session.close()
 
     if result:
         return orjson.dumps(
@@ -128,6 +130,7 @@ def geocode():
             sql = sql.bindparams(ewkt=ewkt)
             with Session.begin() as session:
                 result = session.execute(sql).fetchone()
+                session.close()
 
             # Serialise and return any query result.
             response.content_type = "application/json"
@@ -172,6 +175,7 @@ def geocode():
     sql = sql.bindparams(tsquery=tsquery, limit=limit)
     with Session.begin() as session:
         result = session.execute(sql).fetchall()
+        session.close()
 
     # Serialise and return any query results.
     response.content_type = "application/json"
