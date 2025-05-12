@@ -15,7 +15,7 @@ dependencies = [
   "django-tastypie==0.15.1",
   "bottle==0.13.2",
   "gunicorn == 23.0.0",
-  "fudgeo==0.8.2",
+  "fudgeo==1.2.0",
   "sqlalchemy==2.0.39",
   "azure-storage-blob==12.25.0",
   "orjson==3.10.15",
