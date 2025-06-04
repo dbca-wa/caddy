@@ -110,7 +110,7 @@ requires-dist = [
     { name = "dj-database-url", specifier = "==2.3.0" },
     { name = "django", specifier = "==4.2.21" },
     { name = "django-extensions", specifier = "==4.1" },
-    { name = "fudgeo", specifier = "==1.1.0" },
+    { name = "fudgeo", specifier = "==1.2.0" },
     { name = "gunicorn", specifier = "==23.0.0" },
     { name = "orjson", specifier = "==3.10.18" },
     { name = "psycopg", extras = ["binary", "pool"], specifier = "==3.2.6" },
@@ -347,13 +347,13 @@ wheels = [
 
 [[package]]
 name = "fudgeo"
-version = "1.1.0"
+version = "1.2.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "numpy" },
 ]
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/14/d7/f52278e8f35885fb901516c1bfa0ca1b867944be15db0a4ac9c27e14963d/fudgeo-1.1.0-py3-none-any.whl", hash = "sha256:d788485da6cd16fa1d19812fbe770a8aa395dfdc14c97028e2db8ee115c5bb5b", size = 52852 },
+    { url = "https://files.pythonhosted.org/packages/51/b7/18349b0c5196ca3e327e4cd538b1a2393705eee8aa999bc22d7ebcc86385/fudgeo-1.2.0-py3-none-any.whl", hash = "sha256:2e50547870c64d6d30086919a5be22632e3c2a6c2c336f44a03c18cdc0aa5fe2", size = 53266 },
 ]
 
 [[package]]
