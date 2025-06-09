@@ -11,7 +11,7 @@ dependencies = [
   "python-dotenv==1.0.1",
   "dj-database-url == 2.3.0",
   "django-extensions==3.2.3",
-  "requests==2.32.3",
+  "requests==2.32.4",
   "django-tastypie==0.15.1",
   "bottle==0.13.2",
   "gunicorn == 23.0.0",
