@@ -77,6 +77,14 @@ DATABASES = {
     "default": dj_database_url.config(),
 }
 
+DATABASES["default"]["TIME_ZONE"] = "Australia/Perth"
+# Use PostgreSQL connection pool if using that DB engine (use ConnectionPool defaults).
+if "ENGINE" in DATABASES["default"] and any(eng in DATABASES["default"]["ENGINE"] for eng in ["postgresql", "postgis"]):
+    if "OPTIONS" in DATABASES["default"]:
+        DATABASES["default"]["OPTIONS"]["pool"] = True
+    else:
+        DATABASES["default"]["OPTIONS"] = {"pool": True}
+
 
 # Internationalization
 LANGUAGE_CODE = "en-us"
