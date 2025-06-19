@@ -57,7 +57,7 @@ ENV PYTHONUNBUFFERED=1
 
 # Install the project.
 WORKDIR /app
-COPY geocoder.py gunicorn.py manage.py ./
+COPY gunicorn.py manage.py ./
 COPY caddy ./caddy
 COPY shack ./shack
 USER app
