@@ -3,8 +3,6 @@ kind: Kustomization
 nameSuffix: -uat
 resources:
   - ../../base
-  - ingress.yaml
-  - pdb.yaml
 secretGenerator:
   - name: caddy-env
     type: Opaque
@@ -18,5 +16,4 @@ labels:
       variant: uat
 patches:
   - path: deployment_patch.yaml
-  - path: deployment_hpa_patch.yaml
   - path: service_patch.yaml
