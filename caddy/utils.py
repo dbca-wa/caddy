@@ -7,11 +7,7 @@ def env(key, default=None, required=False):
     Retrieves environment variables and returns Python natives. The (optional)
     default will be returned if the environment variable does not exist.
     """
-    if key in os.environ:
-        value = os.environ[key]
-    else:
-        return
-
+    value = os.environ[key]
     try:
         return ast.literal_eval(value)
     except (SyntaxError, ValueError):
