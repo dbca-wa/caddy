@@ -3,8 +3,6 @@ kind: Kustomization
 nameSuffix: -prod
 resources:
   - ../../base
-  - ingress.yaml
-  - pdb.yaml
   - cronjob_import.yaml
 secretGenerator:
   - name: caddy-env
@@ -19,8 +17,7 @@ labels:
       variant: prod
 patches:
   - path: deployment_patch.yaml
-  - path: deployment_hpa_patch.yaml
   - path: service_patch.yaml
 images:
   - name: ghcr.io/dbca-wa/caddy
-    newTag: 2.3.13
+    newTag: 2.3.14

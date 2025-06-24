@@ -39,14 +39,15 @@ AZURE_ACCOUNT_KEY = env("AZURE_ACCOUNT_KEY", "account_key")
 AZURE_CONTAINER = env("AZURE_CONTAINER", "container")
 
 INSTALLED_APPS = (
+    "django.contrib.admin",
     "django.contrib.auth",
     "django.contrib.contenttypes",
     "django.contrib.sessions",
+    "django.contrib.messages",
     "django.contrib.staticfiles",
     "django.contrib.gis",
     "django.contrib.postgres",
     "django_extensions",
-    "tastypie",
     "shack",
 )
 MIDDLEWARE = [
@@ -54,18 +55,20 @@ MIDDLEWARE = [
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
+    "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
 ]
 TEMPLATES = [
     {
         "BACKEND": "django.template.backends.django.DjangoTemplates",
-        "DIRS": [os.path.join(PROJECT_DIR, "templates")],
+        "DIRS": [],
         "APP_DIRS": True,
         "OPTIONS": {
             "context_processors": [
                 "django.template.context_processors.debug",
                 "django.template.context_processors.request",
                 "django.contrib.auth.context_processors.auth",
+                "django.contrib.messages.context_processors.messages",
             ],
         },
     },
@@ -78,22 +81,25 @@ DATABASES = {
     "default": dj_database_url.config(),
 }
 
+DATABASES["default"]["TIME_ZONE"] = "Australia/Perth"
+# Use PostgreSQL connection pool if using that DB engine (use ConnectionPool defaults).
+if "ENGINE" in DATABASES["default"] and any(eng in DATABASES["default"]["ENGINE"] for eng in ["postgresql", "postgis"]):
+    if "OPTIONS" in DATABASES["default"]:
+        DATABASES["default"]["OPTIONS"]["pool"] = True
+    else:
+        DATABASES["default"]["OPTIONS"] = {"pool": True}
+
 
 # Internationalization
 LANGUAGE_CODE = "en-us"
 TIME_ZONE = "Australia/Perth"
 USE_I18N = False
-USE_L10N = True
 USE_TZ = True
 
 
 # Static files (CSS, JavaScript, Images)
 STATIC_URL = "/static/"
 STATIC_ROOT = os.path.join(BASE_DIR, "staticfiles")
-
-
-# Tastypie settings
-TASTYPIE_DEFAULT_FORMATS = ["json", "jsonp"]
 
 
 # Logging settings

@@ -4,16 +4,19 @@ from django.utils.text import Truncator
 
 
 class Address(models.Model):
-    """An address indexed and searchable via PostgreSQL.
-    """
+    """An address indexed and searchable via PostgreSQL."""
+
     object_id = models.CharField(max_length=64, unique=True, db_index=True)  # Equivalent to cadastre PIN.
-    address_text = models.TextField(help_text='Address document for search')
+    address_text = models.TextField(help_text="Address document for search")
     address_nice = models.TextField(null=True, blank=True)
     owner = models.TextField(null=True, blank=True)
     centroid = models.PointField(srid=4326)
     envelope = models.PolygonField(srid=4326, null=True, blank=True)
     boundary = models.PolygonField(srid=4326, null=True, blank=True)
     data = models.JSONField(default=dict)
+
+    class Meta:
+        verbose_name_plural = "addresses"
 
     def __str__(self):
         if self.address_nice:
@@ -26,5 +29,5 @@ class Address(models.Model):
         f = """{{ object.address_nice }}
 {% if object.owner %}{{ object.owner }}{% endif %}"""
         template = Template(f)
-        context = Context({'object': self})
+        context = Context({"object": self})
         return template.render(context).strip()

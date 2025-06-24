@@ -12,6 +12,7 @@ spec:
       template:
         spec:
           restartPolicy: Never
+          automountServiceAccountToken: false
           containers:
             - name: caddy-import
               image: ghcr.io/dbca-wa/caddy
@@ -49,6 +50,7 @@ spec:
                   cpu: '1000m'
               securityContext:
                 runAsNonRoot: true
+                runAsUser: 1000
                 privileged: false
                 allowPrivilegeEscalation: false
                 capabilities:

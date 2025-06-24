@@ -1,6 +1,8 @@
-from django.urls import include, path
-from .api import v1_api
+from django.contrib import admin
+from django.urls import path, reverse_lazy
+from django.views.generic import RedirectView
 
 urlpatterns = [
-    path('api/', include(v1_api.urls)),  # All API views are defined in api.py
+    path("admin/", admin.site.urls),
+    path("", RedirectView.as_view(url=reverse_lazy("admin:index"))),
 ]
