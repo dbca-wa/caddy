@@ -1,21 +1,15 @@
 # Caddy
 
 Caddy is a small application to harvest land parcel legal description
-fields and index address data via minimal a Django application, and
-expose it as a searchable API for geocoding.
+fields and index address data via minimal a Django application.
 
 ## Installation
 
 The recommended way to set up this project for development is using
 [uv](https://docs.astral.sh/uv/)
 to install and manage a Python virtual environment.
-With uv installed, install the required Python version (see `pyproject.toml`). Example:
+With uv installed, change into the project directory and run:
 
-    uv python install 3.12
-
-Change into the project directory and run:
-
-    uv python pin 3.12
     uv sync
 
 Activate the virtualenv like so:
@@ -24,7 +18,7 @@ Activate the virtualenv like so:
 
 To run Python commands in the activated virtualenv, thereafter run them like so:
 
-    python manage.py
+    python manage.py shell_plus
 
 Manage new or updated project dependencies with uv also, like so:
 
@@ -40,23 +34,6 @@ Required settings are as follows:
     AZURE_ACCOUNT_NAME=azureaccountname
     AZURE_ACCOUNT_KEY=azureaccountsecret
     AZURE_CONTAINER=containername
-
-## Usage
-
-Run the frontend application with `python geocoder.py` (the default port
-is 8080, which can be overridden by defining a `PORT` environment variable.
-
-Run Django console commands manually:
-
-    python manage.py shell_plus
-
-## Testing
-
-Uncomment the `TEST_DATABASE_URL` value to run unit tests:
-
-    python manage.py test --keepdb -v2
-
-Comment this again to use `runserver`.
 
 ## Background
 
