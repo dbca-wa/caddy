@@ -15,7 +15,7 @@ dependencies = [
   "gunicorn == 23.0.0",
   "fudgeo==1.2.0",
   "azure-storage-blob==12.25.1",
-  "orjson==3.10.18",
+  "orjson==3.11.0",
 ]
 
 [dependency-groups]
