@@ -106,7 +106,10 @@ STATIC_ROOT = os.path.join(BASE_DIR, "staticfiles")
 LOGGING = {
     "version": 1,
     "formatters": {
-        "verbose": {"format": "%(asctime)s %(levelname)-12s %(name)-12s %(message)s"},
+        "verbose": {
+            "format": "{asctime} {levelname} {name} {message}",
+            "style": "{",
+        },
     },
     "handlers": {
         "console": {
