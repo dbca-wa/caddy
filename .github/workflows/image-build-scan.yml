@@ -25,7 +25,7 @@ jobs:
       # Checkout repo
       #----------------------------------------------
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         id: checkout-repo
         with:
           fetch-depth: 0
@@ -78,7 +78,7 @@ jobs:
       # Run vulnerability scan on built image
       #----------------------------------------------
       - name: Run Trivy vulnerability scanner
-        uses: aquasecurity/trivy-action@0.31.0
+        uses: aquasecurity/trivy-action@0.32.0
         env:
           TRIVY_DB_REPOSITORY: public.ecr.aws/aquasecurity/trivy-db
         with:
