@@ -1,6 +1,6 @@
 [project]
 name = "caddy"
-version = "2.3.14"
+version = "2.3.15"
 description = "Lightweight application service to harvest and index the cadastre dataset, and expose an API endpoint to allow full-text searching of addresses."
 authors = [{ name = "Ashley Felton", email = "ashley.felton@dbca.wa.gov.au" }]
 license = "Apache-2.0"
