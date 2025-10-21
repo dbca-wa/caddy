@@ -13,6 +13,11 @@ spec:
         spec:
           restartPolicy: Never
           automountServiceAccountToken: false
+          tolerations:
+            - key: arch
+              operator: Equal
+              value: arm64
+              effect: NoSchedule
           containers:
             - name: caddy-import
               image: ghcr.io/dbca-wa/caddy
