@@ -58,6 +58,24 @@ def geocode(query, limit=None):
     return resp
 
 
+def get_feature_count():
+    GEOSERVER_URL = os.environ["GEOSERVER_URL"]
+    params = {
+        "service": "WFS",
+        "version": "1.1.0",
+        "request": "GetFeature",
+        "typeName": os.environ["CADASTRE_LAYER"],
+        "resultType": "hits",
+    }
+    auth = (os.environ["GEOSERVER_USER"], os.environ["GEOSERVER_PASSWORD"])
+    resp = requests.get(url=GEOSERVER_URL, auth=auth, params=params)
+    # Response is always XML. Just parse the feature count from the content.
+    content = str(resp.content)
+    pattern = r'numberOfFeatures="(?P<featureCount>\d+)"'
+    results = re.findall(pattern, content)
+    return int(results[0])
+
+
 def harvest_cadastre_wfs(limit=None):
     """Query the cadastre WFS for features. ``limit`` is optional integer of the
     maximum number of features to query.
@@ -69,7 +87,7 @@ def harvest_cadastre_wfs(limit=None):
         "request": "GetFeature",
         "typeName": os.environ["CADASTRE_LAYER"],
         "outputFormat": "application/json",
-        "sortBy": "cad_pin",
+        "sortBy": "CAD_PIN",
         "maxFeatures": 1,
     }
     auth = (os.environ["GEOSERVER_USER"], os.environ["GEOSERVER_PASSWORD"])
@@ -94,12 +112,12 @@ def harvest_cadastre_wfs(limit=None):
         skipped = 0
         for f in j["features"]:
             #  Query for an existing feature (PIN == object_id)
-            if Address.objects.filter(object_id=f["properties"]["cad_pin"]).exists():
-                add = Address.objects.get(object_id=f["properties"]["cad_pin"])
+            if Address.objects.filter(object_id=f["properties"]["CAD_PIN"]).exists():
+                add = Address.objects.get(object_id=f["properties"]["CAD_PIN"])
                 add.data = {}
                 update = True  # Existing feature
             else:
-                add = Address(object_id=f["properties"]["cad_pin"])
+                add = Address(object_id=f["properties"]["CAD_PIN"])
                 update = False  # New feature
             poly = GEOSGeometry(orjson.dumps(f["geometry"]))
             # Edge case: sometimes features are returned as MultiPolygon.
@@ -108,47 +126,49 @@ def harvest_cadastre_wfs(limit=None):
             if isinstance(poly, MultiPolygon) and len(poly) == 1:
                 poly = poly[0]
             elif isinstance(poly, MultiPolygon) and len(poly) > 1:
-                LOGGER.info(f"Skipping feature with PIN {f['properties']['cad_pin']} (multipolygon with >1 feature)")
+                LOGGER.info(
+                    f"Skipping feature with CAD_PIN {f['properties']['CAD_PIN']} (multipolygon with >1 feature)"
+                )
                 skipped += 1
                 continue
             add.centroid = poly.centroid  # Precalculate the centroid.
             # Edge case: we've had some "zero area" geometries.
             if isinstance(poly.envelope, Point):
-                LOGGER.info(f"Feature with PIN {f['properties']['cad_pin']} has area of 0 (geometry: {f['geometry']})")
+                LOGGER.info(
+                    f"Feature with CAD_PIN {f['properties']['CAD_PIN']} has area of 0 (geometry: {f['geometry']})"
+                )
                 add.envelope = None
                 suspect += 1
             else:
                 add.envelope = poly.envelope  # Simplify the geometry bounds.
             prop = f["properties"]
             address_nice = ""  # Human-readable "nice" address.
-            if "cad_lot_number" in prop and prop["cad_lot_number"]:
-                add.data["lot_number"] = prop["cad_lot_number"]
-                address_nice += "(Lot {}) ".format(prop["cad_lot_number"])
-            if "cad_house_number" in prop and prop["cad_house_number"]:
-                add.data["house_number"] = prop["cad_house_number"]
-                address_nice += "{} ".format(prop["cad_house_number"])
-            if "cad_road_name" in prop and prop["cad_road_name"]:
-                add.data["road_name"] = prop["cad_road_name"]
-                address_nice += "{} ".format(prop["cad_road_name"])
-                if "cad_road_type" in prop and prop["cad_road_type"]:
-                    add.data["road_type"] = prop["cad_road_type"]
+            if "CAD_LOT_NUMBER" in prop and prop["CAD_LOT_NUMBER"]:
+                add.data["lot_number"] = prop["CAD_LOT_NUMBER"]
+                address_nice += "(Lot {}) ".format(prop["CAD_LOT_NUMBER"])
+            if "CAD_HOUSE_NUMBER" in prop and prop["CAD_HOUSE_NUMBER"]:
+                add.data["house_number"] = prop["CAD_HOUSE_NUMBER"]
+                address_nice += "{} ".format(prop["CAD_HOUSE_NUMBER"])
+            if "CAD_ROAD_NAME" in prop and prop["CAD_ROAD_NAME"]:
+                add.data["road_name"] = prop["CAD_ROAD_NAME"]
+                address_nice += "{} ".format(prop["CAD_ROAD_NAME"])
+                if "CAD_ROAD_TYPE" in prop and prop["CAD_ROAD_TYPE"]:
+                    add.data["road_type"] = prop["CAD_ROAD_TYPE"]
                     # Try to match an existing suffix.
-                    if prop["cad_road_type"] in ROADS_ABBREV:
-                        address_nice += "{} ".format(ROADS_ABBREV[prop["cad_road_type"]])
+                    if prop["CAD_ROAD_TYPE"] in ROADS_ABBREV:
+                        address_nice += "{} ".format(ROADS_ABBREV[prop["CAD_ROAD_TYPE"]])
                     else:
-                        address_nice += "{} ".format(prop["cad_road_type"])
-            if "cad_locality" in prop and prop["cad_locality"]:
-                add.data["locality"] = prop["cad_locality"]
-                address_nice += "{} ".format(prop["cad_locality"])
-            if "cad_postcode" in prop and prop["cad_postcode"]:
-                add.data["postcode"] = prop["cad_postcode"]
-                address_nice += "{} ".format(prop["cad_postcode"])
-            if "cad_owner_name" in prop and prop["cad_owner_name"]:
-                add.owner = prop["cad_owner_name"]
-            if "cad_ownership" in prop and prop["cad_ownership"]:
-                add.data["ownership"] = prop["cad_ownership"]
-            if "cad_pin" in prop and prop["cad_pin"]:
-                add.data["pin"] = prop["cad_pin"]
+                        address_nice += "{} ".format(prop["CAD_ROAD_TYPE"])
+            if "CAD_LOCALITY" in prop and prop["CAD_LOCALITY"]:
+                add.data["locality"] = prop["CAD_LOCALITY"]
+                address_nice += "{} ".format(prop["CAD_LOCALITY"])
+            if "CAD_POSTCODE" in prop and prop["CAD_POSTCODE"]:
+                add.data["postcode"] = prop["CAD_POSTCODE"]
+                address_nice += "{} ".format(prop["CAD_POSTCODE"])
+            if "CAD_OWNER_NAME" in prop and prop["CAD_OWNER_NAME"]:
+                add.owner = prop["CAD_OWNER_NAME"]
+            if "CAD_PIN" in prop and prop["CAD_PIN"]:
+                add.data["pin"] = prop["CAD_PIN"]
             add.address_nice = address_nice.strip()
             add.address_text = add.get_address_text()
             if update:  # Save changes to existing features.
