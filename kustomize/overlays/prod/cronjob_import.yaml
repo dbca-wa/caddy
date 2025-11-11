@@ -11,41 +11,17 @@ spec:
       parallelism: 1
       template:
         spec:
-          restartPolicy: Never
-          automountServiceAccountToken: false
-          tolerations:
-            - key: arch
-              operator: Equal
-              value: arm64
-              effect: NoSchedule
           containers:
             - name: caddy-import
               image: ghcr.io/dbca-wa/caddy
               command: ['python']
-              args: ['manage.py', 'import_cpt_cadastre_scdb']
+              args: ['manage.py', 'harvest_cadastre_wfs']
+              envFrom:
+                - secretRef:
+                    name: caddy-env-prod
               env:
                 - name: TZ
                   value: 'Australia/Perth'
-                - name: DATABASE_URL
-                  valueFrom:
-                    secretKeyRef:
-                      name: caddy-env-prod
-                      key: DATABASE_URL
-                - name: AZURE_ACCOUNT_NAME
-                  valueFrom:
-                    secretKeyRef:
-                      name: caddy-env-prod
-                      key: AZURE_ACCOUNT_NAME
-                - name: AZURE_ACCOUNT_KEY
-                  valueFrom:
-                    secretKeyRef:
-                      name: caddy-env-prod
-                      key: AZURE_ACCOUNT_KEY
-                - name: AZURE_CONTAINER
-                  valueFrom:
-                    secretKeyRef:
-                      name: caddy-env-prod
-                      key: AZURE_CONTAINER
               resources:
                 requests:
                   memory: '256Mi'
@@ -65,8 +41,14 @@ spec:
               volumeMounts:
                 - mountPath: /tmp
                   name: tmpfs-ram
-          # Give the cronjob container an in-memory temp directory.
           volumes:
             - name: tmpfs-ram
               emptyDir:
                 medium: 'Memory'
+          restartPolicy: Never
+          automountServiceAccountToken: false
+          tolerations:
+            - key: arch
+              operator: Equal
+              value: arm64
+              effect: NoSchedule
