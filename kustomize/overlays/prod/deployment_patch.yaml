@@ -8,14 +8,6 @@ spec:
       containers:
         - name: caddy
           imagePullPolicy: IfNotPresent
-          env:
-            - name: DATABASE_URL
-              valueFrom:
-                secretKeyRef:
-                  name: caddy-env-prod
-                  key: DATABASE_URL
-            - name: SECRET_KEY
-              valueFrom:
-                secretKeyRef:
-                  name: caddy-env-prod
-                  key: SECRET_KEY
+          envFrom:
+            - secretRef:
+                name: caddy-env-prod

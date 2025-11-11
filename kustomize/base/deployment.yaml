@@ -20,8 +20,6 @@ spec:
           image: ghcr.io/dbca-wa/caddy
           imagePullPolicy: Always
           env:
-            - name: ALLOWED_HOSTS
-              value: '.dbca.wa.gov.au'
             - name: TZ
               value: 'Australia/Perth'
           resources:
