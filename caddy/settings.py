@@ -1,9 +1,7 @@
-"""
-Django settings for caddy project.
-"""
-
 import os
 import sys
+from pathlib import Path
+from zoneinfo import ZoneInfo
 
 import dj_database_url
 
@@ -11,27 +9,28 @@ from caddy.utils import env
 
 # Project paths
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
-BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-PROJECT_DIR = os.path.join(BASE_DIR, "caddy")
+BASE_DIR = str(Path(__file__).resolve().parents[1])
+PROJECT_DIR = str(Path(__file__).resolve().parents[0])
 # Add PROJECT_DIR to the system path.
 sys.path.insert(0, PROJECT_DIR)
 
 # Application definition
 DEBUG = env("DEBUG", False)
-DEFAULT_AUTO_FIELD = "django.db.models.AutoField"
 SECRET_KEY = env("SECRET_KEY", "PlaceholderSecretKey")
 CSRF_COOKIE_SECURE = env("CSRF_COOKIE_SECURE", False)
+CSRF_TRUSTED_ORIGINS = env("CSRF_TRUSTED_ORIGINS", "http://127.0.0.1").split(",")
 SESSION_COOKIE_SECURE = env("SESSION_COOKIE_SECURE", False)
 SECURE_SSL_REDIRECT = env("SECURE_SSL_REDIRECT", False)
 SECURE_REFERRER_POLICY = env("SECURE_REFERRER_POLICY", None)
 SECURE_HSTS_SECONDS = env("SECURE_HSTS_SECONDS", 0)
 if not DEBUG:
-    ALLOWED_HOSTS = env("ALLOWED_HOSTS", "").split(",")
+    ALLOWED_HOSTS = env("ALLOWED_HOSTS", "localhost").split(",")
 else:
     ALLOWED_HOSTS = ["*"]
 INTERNAL_IPS = ["127.0.0.1", "::1"]
 ROOT_URLCONF = "caddy.urls"
 WSGI_APPLICATION = "caddy.wsgi.application"
+DEFAULT_AUTO_FIELD = "django.db.models.AutoField"
 
 # Azure blob storage credentials.
 AZURE_ACCOUNT_NAME = env("AZURE_ACCOUNT_NAME", "account_name")
@@ -51,6 +50,7 @@ INSTALLED_APPS = (
     "shack",
 )
 MIDDLEWARE = [
+    "caddy.middleware.HealthCheckMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
@@ -93,6 +93,7 @@ if "ENGINE" in DATABASES["default"] and any(eng in DATABASES["default"]["ENGINE"
 # Internationalization
 LANGUAGE_CODE = "en-us"
 TIME_ZONE = "Australia/Perth"
+TZ = ZoneInfo(TIME_ZONE)
 USE_I18N = False
 USE_TZ = True
 
