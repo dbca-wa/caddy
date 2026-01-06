@@ -38,6 +38,7 @@ AZURE_ACCOUNT_KEY = env("AZURE_ACCOUNT_KEY", "account_key")
 AZURE_CONTAINER = env("AZURE_CONTAINER", "container")
 
 INSTALLED_APPS = (
+    "whitenoise.runserver_nostatic",
     "django.contrib.admin",
     "django.contrib.auth",
     "django.contrib.contenttypes",
@@ -51,9 +52,11 @@ INSTALLED_APPS = (
 )
 MIDDLEWARE = [
     "caddy.middleware.HealthCheckMiddleware",
+    "django.middleware.security.SecurityMiddleware",
+    "whitenoise.middleware.WhiteNoiseMiddleware",
+    "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
-    "django.contrib.sessions.middleware.SessionMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
@@ -101,6 +104,7 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 STATIC_URL = "/static/"
 STATIC_ROOT = os.path.join(BASE_DIR, "staticfiles")
+WHITENOISE_ROOT = STATIC_ROOT
 
 
 # Logging settings
