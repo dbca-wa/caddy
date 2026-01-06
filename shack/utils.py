@@ -101,7 +101,7 @@ def harvest_cadastre_wfs(limit=None):
     if limit and limit < params["maxFeatures"]:
         params["maxFeatures"] = limit
     for i in range(0, total_features, params["maxFeatures"]):
-        LOGGER.info(f"Querying features {i} to {i + params['maxFeatures']}")
+        LOGGER.info(f"Querying features {i} to {i + params['maxFeatures']} of {total_features}")
         # Query the server for features, using startIndex.
         params["startIndex"] = i
         r = requests.get(url=GEOSERVER_URL, auth=auth, params=params)

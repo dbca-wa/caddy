@@ -1,6 +1,6 @@
 # syntax=docker/dockerfile:1
 # Prepare the base environment.
-FROM python:3.13-slim-bookworm AS builder_base
+FROM python:3.13 AS builder_base
 
 # This approximately follows this guide: https://hynek.me/articles/docker-uv/
 # Which creates a standalone environment with the dependencies.
@@ -14,11 +14,12 @@ ENV UV_LINK_MODE=copy \
   UV_PYTHON_DOWNLOADS=never \
   UV_PROJECT_ENVIRONMENT=/app/.venv
 
-COPY --from=ghcr.io/astral-sh/uv:0.7 /uv /uvx /bin/
+COPY --from=ghcr.io/astral-sh/uv:0.9 /uv /uvx /bin/
 
 # Since there's no point in shipping lock files, we move them
 # into a directory that is NOT copied into the runtime image.
 # The trailing slash makes COPY create `/_lock/` automagically.
+WORKDIR /_lock
 COPY pyproject.toml uv.lock /_lock/
 
 # Install OS requirements to build packages.
@@ -27,21 +28,16 @@ RUN apt-get update -y \
 
 # Synchronize dependencies.
 # This layer is cached until uv.lock or pyproject.toml change.
-RUN --mount=type=cache,target=/root/.cache \
-  cd /_lock && \
-  uv sync \
-  --frozen \
-  --no-group dev
+RUN --mount=type=cache,target=/root/.cache uv sync --frozen --no-group dev
 
 ##################################################################################
 
-FROM python:3.13-slim-bookworm
+FROM python:3.13
 LABEL org.opencontainers.image.authors=asi@dbca.wa.gov.au
 LABEL org.opencontainers.image.source=https://github.com/dbca-wa/caddy
 
-# Install OS packages
+# Install OS packages (gdal, etc.)
 RUN apt-get update -y \
-  && apt-get upgrade -y \
   && apt-get install -y gdal-bin proj-bin \
   && rm -rf /var/lib/apt/lists/*
 
@@ -49,17 +45,17 @@ RUN apt-get update -y \
 RUN groupadd -r -g 1000 app \
   && useradd -r -u 1000 -d /app -g app -N app
 
+WORKDIR /app
 COPY --from=builder_base --chown=app:app /app /app
-# Make sure we use the virtualenv by default
-ENV PATH="/app/.venv/bin:$PATH"
-# Run Python unbuffered
-ENV PYTHONUNBUFFERED=1
+ENV PATH="/app/.venv/bin:$PATH" \
+  # Run Python unbuffered:
+  PYTHONUNBUFFERED=1
 
 # Install the project.
-WORKDIR /app
 COPY gunicorn.py manage.py ./
 COPY caddy ./caddy
 COPY shack ./shack
+RUN python manage.py collectstatic --noinput
 USER app
 EXPOSE 8080
 CMD ["gunicorn", "caddy.wsgi", "--config", "gunicorn.py"]
