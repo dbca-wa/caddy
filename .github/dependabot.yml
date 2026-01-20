@@ -6,7 +6,11 @@ updates:
       interval: 'weekly'
     ignore:
       - dependency-name: 'requirements.txt'
+    commit-message:
+      prefix: '[python] '
   - package-ecosystem: 'github-actions'
     directory: '/'
     schedule:
       interval: 'weekly'
+    commit-message:
+      prefix: '[actions] '
