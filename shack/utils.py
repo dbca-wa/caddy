@@ -100,6 +100,8 @@ def harvest_cadastre_wfs(limit=None):
     params["maxFeatures"] = 1000
     if limit and limit < params["maxFeatures"]:
         params["maxFeatures"] = limit
+    reserve_pattern = re.compile("(?P<reserve>[0-9]+)$")
+
     for i in range(0, total_features, params["maxFeatures"]):
         LOGGER.info(f"Querying features {i} to {i + params['maxFeatures']} of {total_features}")
         # Query the server for features, using startIndex.
@@ -169,6 +171,15 @@ def harvest_cadastre_wfs(limit=None):
                 add.owner = prop["CAD_OWNER_NAME"]
             if "CAD_PIN" in prop and prop["CAD_PIN"]:
                 add.data["pin"] = prop["CAD_PIN"]
+
+            # Reserves
+            if "CAD_PITYPE_3_1" in prop and prop["CAD_PITYPE_3_1"]:
+                m = re.search(reserve_pattern, prop["CAD_PITYPE_3_1"])
+                if m:
+                    reserve_id = m.group()
+                    add.data["reserve"] = reserve_id
+                    address_nice = f"RESERVE {reserve_id} " + address_nice
+
             add.address_nice = address_nice.strip()
             add.address_text = add.get_address_text()
             if update:  # Save changes to existing features.
