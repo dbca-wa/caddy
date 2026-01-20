@@ -176,8 +176,9 @@ def harvest_cadastre_wfs(limit=None):
             if "CAD_PITYPE_3_1" in prop and prop["CAD_PITYPE_3_1"]:
                 m = re.search(reserve_pattern, prop["CAD_PITYPE_3_1"])
                 if m:
-                    add.data["reserve"] = m.group()
-                    add.address_nice = f"RESERVE {m.group()} " + address_nice
+                    reserve_id = m.group()
+                    add.data["reserve"] = reserve_id
+                    address_nice = f"RESERVE {reserve_id} " + address_nice
 
             add.address_nice = address_nice.strip()
             add.address_text = add.get_address_text()
