@@ -159,9 +159,9 @@ requires-dist = [
 [package.metadata.requires-dev]
 dev = [
     { name = "ipdb", specifier = ">=0.13.13" },
-    { name = "ipython", specifier = ">=9.10.0" },
+    { name = "ipython", specifier = ">=9.12.0" },
     { name = "mixer", specifier = ">=7.2.2" },
-    { name = "pre-commit", specifier = ">=4.5.1" },
+    { name = "pre-commit", specifier = ">=4.6.0" },
 ]
 
 [[package]]
