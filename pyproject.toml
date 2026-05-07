@@ -1,26 +1,26 @@
 [project]
 name = "caddy"
-version = "2.3.18"
+version = "2.3.19"
 description = "Lightweight application service to harvest and index the cadastre dataset, and expose an API endpoint to allow full-text searching of addresses."
 authors = [{ name = "Ashley Felton", email = "ashley.felton@dbca.wa.gov.au" }]
 license = "Apache-2.0"
 requires-python = ">=3.13,<4.0"
 dependencies = [
   "django==5.2.13",
-  "psycopg[binary,pool]==3.3.3",
+  "psycopg[binary,pool]==3.3.4",
   "python-dotenv==1.2.2",
   "dj-database-url==3.1.2",
   "django-extensions==4.1",
   "requests==2.33.1",
-  "gunicorn==25.3.0",
-  "fudgeo==1.5.7",
+  "gunicorn[fast]==26.0.0",
+  "fudgeo==1.5.9",
   "azure-storage-blob==12.28.0",
   "orjson==3.11.8",
   "whitenoise[brotli]==6.12.0",
 ]
 
 [dependency-groups]
-dev = ["ipython>=9.12.0", "ipdb>=0.13.13", "mixer>=7.2.2", "pre-commit>=4.6.0"]
+dev = ["ipython>=9.13.0", "ipdb>=0.13.13", "mixer>=7.2.2", "pre-commit>=4.6.0"]
 
 # Reference: https://docs.astral.sh/ruff/configuration/
 [tool.ruff]
