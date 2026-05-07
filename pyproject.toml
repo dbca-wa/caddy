@@ -6,7 +6,7 @@ authors = [{ name = "Ashley Felton", email = "ashley.felton@dbca.wa.gov.au" }]
 license = "Apache-2.0"
 requires-python = ">=3.13,<4.0"
 dependencies = [
-  "django==5.2.13",
+  "django==6.0.5",
   "psycopg[binary,pool]==3.3.4",
   "python-dotenv==1.2.2",
   "dj-database-url==3.1.2",
