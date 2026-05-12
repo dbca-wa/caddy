@@ -3,6 +3,7 @@ media/
 staticfiles/
 logs/
 .env
+.env.enc
 .coverage
 *.pyc
 *.sw[o-p]
