@@ -11,11 +11,11 @@ dependencies = [
   "python-dotenv==1.2.2",
   "dj-database-url==3.1.2",
   "django-extensions==4.1",
-  "requests==2.33.1",
+  "requests==2.34.2",
   "gunicorn[fast]==26.0.0",
   "fudgeo==1.5.9",
   "azure-storage-blob==12.28.0",
-  "orjson==3.11.8",
+  "orjson==3.11.9",
   "whitenoise[brotli]==6.12.0",
 ]
 
