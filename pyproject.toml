@@ -13,7 +13,7 @@ dependencies = [
   "django-extensions==4.1",
   "requests==2.34.2",
   "gunicorn[fast]==26.0.0",
-  "fudgeo==1.5.9",
+  "fudgeo==1.5.10",
   "azure-storage-blob==12.30.0",
   "orjson==3.11.9",
   "whitenoise[brotli]==6.12.0",
