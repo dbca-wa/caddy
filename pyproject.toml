@@ -6,21 +6,21 @@ authors = [{ name = "Ashley Felton", email = "ashley.felton@dbca.wa.gov.au" }]
 license = "Apache-2.0"
 requires-python = ">=3.13,<4.0"
 dependencies = [
-  "django==5.2.14",
+  "django==5.2.17",
   "psycopg[binary,pool]==3.3.4",
   "python-dotenv==1.2.2",
   "dj-database-url==3.1.2",
   "django-extensions==4.1",
   "requests==2.34.2",
   "gunicorn[fast]==26.0.0",
-  "fudgeo==1.5.9",
+  "fudgeo==1.5.10",
   "azure-storage-blob==12.28.0",
-  "orjson==3.11.9",
+  "orjson==3.12.0",
   "whitenoise[brotli]==6.12.0",
 ]
 
 [dependency-groups]
-dev = ["ipython>=9.13.0", "ipdb>=0.13.13", "mixer>=7.2.2", "pre-commit>=4.6.0"]
+dev = ["ipython>=9.16.1", "ipdb>=0.13.13", "mixer>=7.2.2", "pre-commit>=4.6.2"]
 
 # Reference: https://docs.astral.sh/ruff/configuration/
 [tool.ruff]
