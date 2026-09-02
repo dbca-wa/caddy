@@ -14,7 +14,7 @@ dependencies = [
   "requests==2.34.2",
   "gunicorn[fast]==26.1.0",
   "fudgeo==1.5.10",
-  "azure-storage-blob==12.30.0",
+  "azure-storage-blob==12.30.1",
   "orjson==3.12.0",
   "whitenoise[brotli]==6.12.0",
 ]
