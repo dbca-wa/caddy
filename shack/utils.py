@@ -74,8 +74,16 @@ def geocode(query, limit=None):
     return resp
 
 
-def get_feature_count():
-    GEOSERVER_URL = os.environ["GEOSERVER_URL"]
+def get_feature_count(session=None, timeout=WFS_TIMEOUT):
+    """Return the number of features in the cadastre layer.
+
+    This uses ``resultType=hits`` so the server only has to count matching
+    features. Asking for a normal GetFeature response (even with
+    ``maxFeatures=1``) still makes GeoServer evaluate the query, including any
+    ``sortBy``, over the whole layer, which is slow enough on large layers to
+    look like the harvest has hung.
+    """
+    geoserver_url = os.environ["GEOSERVER_URL"]
     params = {
         "service": "WFS",
         "version": "1.1.0",
@@ -83,12 +91,20 @@ def get_feature_count():
         "typeName": os.environ["CADASTRE_LAYER"],
         "resultType": "hits",
     }
-    auth = (os.environ["GEOSERVER_USER"], os.environ["GEOSERVER_PASSWORD"])
-    resp = requests.get(url=GEOSERVER_URL, auth=auth, params=params)
+    if session is None:
+        session = requests
+        auth = (os.environ["GEOSERVER_USER"], os.environ["GEOSERVER_PASSWORD"])
+    else:
+        auth = None
+
+    resp = session.get(url=geoserver_url, auth=auth, params=params, timeout=timeout)
+    resp.raise_for_status()
     # Response is always XML. Just parse the feature count from the content.
     content = str(resp.content)
     pattern = r'numberOfFeatures="(?P<featureCount>\d+)"'
     results = re.findall(pattern, content)
+    if not results:
+        raise ValueError("WFS response did not contain a feature count")
     return int(results[0])
 
 
@@ -133,18 +149,22 @@ def harvest_cadastre_wfs(limit=None):
         "outputFormat": "application/json",
         "srsName": "EPSG:4326",
         "sortBy": "CAD_PIN",
-        "maxFeatures": 1,
     }
     summary = {"created": 0, "updated": 0, "skipped": 0, "suspect": 0}
 
     with _wfs_session(auth) as session:
         # Query once for the total feature count, then page through the results.
-        response = session.get(geoserver_url, params=params, timeout=WFS_TIMEOUT)
-        response.raise_for_status()
+        # Use a hits query: it is much cheaper than a sorted GetFeature.
+        LOGGER.info("Counting features in %s", params["typeName"])
         try:
-            total_features = int(orjson.loads(response.content).get("totalFeatures", -1))
-        except (TypeError, ValueError):
+            total_features = get_feature_count(session)
+        except (requests.RequestException, ValueError) as exc:
+            LOGGER.warning("Could not determine feature count: %s", exc)
             total_features = -1
+
+        if total_features == 0 and limit is None:
+            LOGGER.info("Harvest complete: no features to process")
+            return summary
 
         if total_features < 0:
             expected_total = limit
@@ -154,6 +174,7 @@ def harvest_cadastre_wfs(limit=None):
             expected_total = total_features
 
         start_index = 0
+        previous_first_pin = None
         while True:
             if limit is not None:
                 remaining = limit - start_index
@@ -179,6 +200,18 @@ def harvest_cadastre_wfs(limit=None):
             features = orjson.loads(response.content).get("features") or []
             if not features:
                 break
+
+            # Guard against a server that ignores startIndex: without this the
+            # loop would re-process the same page forever when the total count
+            # is unknown.
+            first_pin = (features[0].get("properties") or {}).get("CAD_PIN")
+            if start_index and first_pin is not None and first_pin == previous_first_pin:
+                LOGGER.error(
+                    "WFS returned the same first feature for startIndex %s; stopping to avoid an endless loop",
+                    start_index,
+                )
+                break
+            previous_first_pin = first_pin
 
             if limit is not None:
                 # Never process more than the requested number of features.
