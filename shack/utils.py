@@ -28,13 +28,13 @@ class LoadExtension(Operation):
         pass
 
     def database_forwards(self, app_label, schema_editor, from_state, to_state):
-        schema_editor.execute("CREATE EXTENSION IF NOT EXISTS {}".format(self.name))
+        schema_editor.execute(f"CREATE EXTENSION IF NOT EXISTS {self.name}")
 
     def database_backwards(self, app_label, schema_editor, from_state, to_state):
-        schema_editor.execute("DROP EXTENSION {}".format(self.name))
+        schema_editor.execute(f"DROP EXTENSION {self.name}")
 
     def describe(self):
-        return "Creates extension {}".format(self.name)
+        return f"Creates extension {self.name}"
 
 
 def geocode(query, limit=None):
@@ -143,37 +143,38 @@ def harvest_cadastre_wfs(limit=None):
                 suspect += 1
             else:
                 add.envelope = poly.envelope  # Simplify the geometry bounds.
+            add.boundary = poly
             prop = f["properties"]
             address_nice = ""  # Human-readable "nice" address.
-            if "CAD_LOT_NUMBER" in prop and prop["CAD_LOT_NUMBER"]:
+            if prop.get("CAD_LOT_NUMBER"):
                 add.data["lot_number"] = prop["CAD_LOT_NUMBER"]
                 address_nice += "(Lot {}) ".format(prop["CAD_LOT_NUMBER"])
-            if "CAD_HOUSE_NUMBER" in prop and prop["CAD_HOUSE_NUMBER"]:
+            if prop.get("CAD_HOUSE_NUMBER"):
                 add.data["house_number"] = prop["CAD_HOUSE_NUMBER"]
                 address_nice += "{} ".format(prop["CAD_HOUSE_NUMBER"])
-            if "CAD_ROAD_NAME" in prop and prop["CAD_ROAD_NAME"]:
+            if prop.get("CAD_ROAD_NAME"):
                 add.data["road_name"] = prop["CAD_ROAD_NAME"]
                 address_nice += "{} ".format(prop["CAD_ROAD_NAME"])
-                if "CAD_ROAD_TYPE" in prop and prop["CAD_ROAD_TYPE"]:
+                if prop.get("CAD_ROAD_TYPE"):
                     add.data["road_type"] = prop["CAD_ROAD_TYPE"]
                     # Try to match an existing suffix.
                     if prop["CAD_ROAD_TYPE"] in ROADS_ABBREV:
                         address_nice += "{} ".format(ROADS_ABBREV[prop["CAD_ROAD_TYPE"]])
                     else:
                         address_nice += "{} ".format(prop["CAD_ROAD_TYPE"])
-            if "CAD_LOCALITY" in prop and prop["CAD_LOCALITY"]:
+            if prop.get("CAD_LOCALITY"):
                 add.data["locality"] = prop["CAD_LOCALITY"]
                 address_nice += "{} ".format(prop["CAD_LOCALITY"])
-            if "CAD_POSTCODE" in prop and prop["CAD_POSTCODE"]:
+            if prop.get("CAD_POSTCODE"):
                 add.data["postcode"] = prop["CAD_POSTCODE"]
                 address_nice += "{} ".format(prop["CAD_POSTCODE"])
-            if "CAD_OWNER_NAME" in prop and prop["CAD_OWNER_NAME"]:
+            if prop.get("CAD_OWNER_NAME"):
                 add.owner = prop["CAD_OWNER_NAME"]
-            if "CAD_PIN" in prop and prop["CAD_PIN"]:
+            if prop.get("CAD_PIN"):
                 add.data["pin"] = prop["CAD_PIN"]
 
             # Reserves
-            if "CAD_PITYPE_3_1" in prop and prop["CAD_PITYPE_3_1"]:
+            if prop.get("CAD_PITYPE_3_1"):
                 m = re.search(reserve_pattern, prop["CAD_PITYPE_3_1"])
                 if m:
                     reserve_id = m.group()
@@ -289,7 +290,7 @@ def import_cpt_cadastre_scdb(blob_name=None):
         # If >1 or 0, skip the feature.
         geom = record["geom"]
         if len(geom.polygons) > 1:
-            LOGGER.info(f'Skipping feature with PIN {record["pin"]} (multipolygon with >1 feature)')
+            LOGGER.info(f"Skipping feature with PIN {record['pin']} (multipolygon with >1 feature)")
             continue
 
         # Convert the fudgeo geometry to GEOSGeometry.
@@ -302,7 +303,7 @@ def import_cpt_cadastre_scdb(blob_name=None):
 
         # Edge case: we sometimes have "zero area" geometries.
         if isinstance(shape.envelope, Point):
-            LOGGER.info(f'Feature with PIN {record["pin"]} has zero area')
+            LOGGER.info(f"Feature with PIN {record['pin']} has zero area")
             address.envelope = None
             address.boundary = None
             suspect += 1
@@ -311,26 +312,26 @@ def import_cpt_cadastre_scdb(blob_name=None):
 
         if record["lot_number"]:
             address.data["lot_number"] = record["lot_number"]
-            address_nice += f'(Lot {record["lot_number"]}) '
+            address_nice += f"(Lot {record['lot_number']}) "
         if record["house_number"]:
             address.data["house_number"] = record["house_number"]
-            address_nice += f'{record["house_number"]} '
+            address_nice += f"{record['house_number']} "
         if record["road_name"]:
             address.data["road_name"] = record["road_name"]
-            address_nice += f'{record["road_name"]} '
+            address_nice += f"{record['road_name']} "
             if record["road_type"]:
                 address.data["road_type"] = record["road_type"]
                 # Try to match an existing suffix.
                 if record["road_type"] in ROADS_ABBREV:
-                    address_nice += f'{ROADS_ABBREV[record["road_type"]]} '
+                    address_nice += f"{ROADS_ABBREV[record['road_type']]} "
                 else:
-                    address_nice += f'{record["road_type"]} '
+                    address_nice += f"{record['road_type']} "
         if record["locality"]:
             address.data["locality"] = record["locality"]
-            address_nice += f'{record["locality"]} '
+            address_nice += f"{record['locality']} "
         if record["postcode"]:
             address.data["postcode"] = record["postcode"]
-            address_nice += f'{record["postcode"]} '
+            address_nice += f"{record['postcode']} "
         if record["owner_name"]:
             address.owner = record["owner_name"].strip()
         if record["pin"]:
