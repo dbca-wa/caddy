@@ -1,19 +1,19 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: caddy-deployment
+  name: caddy-webserver
   labels:
-    app: caddy-deployment
+    app: caddy-webserver
 spec:
   selector:
     matchLabels:
-      app: caddy-deployment
+      app: caddy-webserver
   strategy:
     type: RollingUpdate
   template:
     metadata:
       labels:
-        app: caddy-deployment
+        app: caddy-webserver
     spec:
       containers:
         - name: caddy
@@ -63,13 +63,20 @@ spec:
             runAsNonRoot: true
             seccompProfile:
               type: RuntimeDefault
-            runAsUser: 1000
+            runAsUser: 65532
             privileged: false
             allowPrivilegeEscalation: false
             capabilities:
               drop:
                 - ALL
-            readOnlyRootFilesystem: false
+            readOnlyRootFilesystem: true
+          volumeMounts:
+            - mountPath: /tmp
+              name: tmpfs-ram
+      volumes:
+        - name: tmpfs-ram
+          emptyDir:
+            medium: 'Memory'
       restartPolicy: Always
       terminationGracePeriodSeconds: 180
       automountServiceAccountToken: false
