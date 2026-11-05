@@ -1,61 +1,71 @@
 # syntax=docker/dockerfile:1
-# Prepare the base environment.
-FROM python:3.13 AS builder_base
+# Args to centralise versions.
+# PYTHON_VERSION is the DHI runtime tag.
+ARG PYTHON_VERSION=3.13-debian13-dev
+ARG UV_VERSION=0.13
 
-# This approximately follows this guide: https://hynek.me/articles/docker-uv/
-# Which creates a standalone environment with the dependencies.
-# - Silence uv complaining about not being able to use hard links,
-# - tell uv to byte-compile packages for faster application startups,
-# - prevent uv from accidentally downloading isolated Python builds,
-# - pick a Python,
-# - and finally declare `/app` as the target for `uv sync`.
-ENV UV_LINK_MODE=copy \
-  UV_COMPILE_BYTECODE=1 \
-  UV_PYTHON_DOWNLOADS=never \
-  UV_PROJECT_ENVIRONMENT=/app/.venv
+# ---- Stages ----
+FROM ghcr.io/astral-sh/uv:${UV_VERSION} AS uv
+FROM dhi.io/python:${PYTHON_VERSION} AS builder
 
-COPY --from=ghcr.io/astral-sh/uv:0.13 /uv /bin/
-
-# Since there's no point in shipping lock files, we move them
-# into a directory that is NOT copied into the runtime image.
-# The trailing slash makes COPY create `/_lock/` automagically.
-WORKDIR /_lock
-COPY pyproject.toml uv.lock /_lock/
-
-# Install OS requirements to build packages.
-RUN apt-get update -y \
-  && apt-get install -y gcc
-
-# Synchronize dependencies.
-# This layer is cached until uv.lock or pyproject.toml change.
-RUN --mount=type=cache,target=/root/.cache uv sync --frozen --no-group dev
-
-##################################################################################
-
-FROM python:3.13
-LABEL org.opencontainers.image.authors=asi@dbca.wa.gov.au
-LABEL org.opencontainers.image.source=https://github.com/dbca-wa/caddy
-
-# Install OS packages (gdal, etc.)
-RUN apt-get update -y \
-  && apt-get install -y gdal-bin proj-bin \
-  && rm -rf /var/lib/apt/lists/*
-
-# Create a non-root user.
-RUN groupadd -r -g 1000 app \
-  && useradd -r -u 1000 -d /app -g app -N app
+# ---- Builder stage ----
+# gcc is required: gunicorn[fast] -> gunicorn-h1c has no wheel for every
+# platform and builds its extension from source.
+COPY --from=uv /uv /bin/uv
 
 WORKDIR /app
-COPY --from=builder_base --chown=app:app /app /app
-ENV PATH="/app/.venv/bin:$PATH" \
-  # Run Python unbuffered:
-  PYTHONUNBUFFERED=1
 
-# Install the project.
-COPY gunicorn.py manage.py ./
-COPY caddy ./caddy
-COPY shack ./shack
-RUN python manage.py collectstatic --noinput
-USER app
+RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
+  --mount=type=cache,target=/var/lib/apt/lists,sharing=locked \
+  apt-get update && apt-get install -y --no-install-recommends gcc
+
+# Install only runtime dependencies into /app/.venv. The venv path must match
+# the runtime stage: uv writes absolute shebangs into console scripts such as
+# gunicorn.
+RUN --mount=type=cache,target=/root/.cache/uv \
+  --mount=type=bind,source=pyproject.toml,target=pyproject.toml \
+  --mount=type=bind,source=uv.lock,target=uv.lock \
+  uv sync --locked --no-group dev --link-mode=copy --compile-bytecode --no-python-downloads
+
+# ---- Runtime stage ----
+FROM dhi.io/python:${PYTHON_VERSION} AS runtime
+LABEL org.opencontainers.image.title="caddy" \
+  org.opencontainers.image.description="DBCA Cadastre Indexer" \
+  org.opencontainers.image.source="https://github.com/dbca-wa/caddy" \
+  org.opencontainers.image.vendor="DBCA" \
+  org.opencontainers.image.authors="asi@dbca.wa.gov.au"
+
+# Environment variables
+ENV PYTHONUNBUFFERED=1 \
+  PYTHONDONTWRITEBYTECODE=1 \
+  PATH="/app/.venv/bin:$PATH"
+
+# GDAL/GEOS/PROJ runtime libraries for django.contrib.gis. The DHI base has no
+# /etc/ld.so.cache, so ldconfig is required for Django's ctypes-based lookup.
+RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
+  --mount=type=cache,target=/var/lib/apt/lists,sharing=locked \
+  apt-get update && apt-get install -y --no-install-recommends \
+  libgdal36 \
+  libgeos-c1t64 \
+  libproj25 \
+  proj-data \
+  && ldconfig
+
+# Copy installed virtualenv from builder (same path, so console-script shebangs stay valid).
+WORKDIR /app
+COPY --from=builder --chown=nonroot:nonroot /app/.venv /app/.venv
+
+# Copy the application files
+COPY --chown=nonroot:nonroot gunicorn.py manage.py ./
+COPY --chown=nonroot:nonroot caddy ./caddy
+COPY --chown=nonroot:nonroot shack ./shack
+
+RUN <<EOF
+python -m compileall -q manage.py caddy shack
+python manage.py collectstatic --noinput
+EOF
+
+# Image runs as the nonroot user
+USER nonroot
 EXPOSE 8080
 CMD ["gunicorn", "caddy.wsgi", "--config", "gunicorn.py"]
