@@ -19,13 +19,18 @@ class Command(BaseCommand):
                 limit = int(options['limit'])
             except ValueError:
                 raise CommandError('Invalid limit value: {}'.format(options['limit']))
+            if limit < 0:
+                raise CommandError('Limit must be zero or greater')
         else:
             limit = None
 
         self.stdout.write('Starting harvest of cadastre addresses')
         logger.info('Starting harvest of cadastre addresses')
-        harvest_cadastre_wfs(limit)
-        self.stdout.write('Finished harvest of cadastre addresses')
+        summary = harvest_cadastre_wfs(limit)
+        self.stdout.write(
+            'Harvest complete: {created} created, {updated} updated, '
+            '{skipped} skipped, {suspect} suspect'.format(**summary)
+        )
         logger.info('Finished harvest of cadastre addresses')
 
         return

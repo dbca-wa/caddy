@@ -7,13 +7,29 @@ import orjson
 import requests
 from azure.storage.blob import BlobClient
 from django.conf import settings
-from django.contrib.gis.geos import GEOSGeometry, MultiPolygon, Point
+from django.contrib.gis.geos import GEOSException, GEOSGeometry, MultiPolygon, Point, Polygon
+from django.db import transaction
 from django.db.migrations.operations.base import Operation
 from fudgeo.geopkg import GeoPackage
+from requests.adapters import HTTPAdapter
+from urllib3.util.retry import Retry
 
 from .models import Address
 
 LOGGER = logging.getLogger("caddy")
+
+WFS_PAGE_SIZE = 1000
+WFS_TIMEOUT = (10, 120)
+RESERVE_PATTERN = re.compile(r"(?P<reserve>[0-9]+)$")
+ADDRESS_UPDATE_FIELDS = (
+    "centroid",
+    "envelope",
+    "boundary",
+    "owner",
+    "address_nice",
+    "address_text",
+    "data",
+)
 
 
 class LoadExtension(Operation):
@@ -76,124 +92,269 @@ def get_feature_count():
     return int(results[0])
 
 
+def _wfs_session(auth):
+    """Return a requests session with connection reuse and retries for transient errors."""
+    retry = Retry(
+        total=5,
+        backoff_factor=1,
+        status_forcelist=(429, 500, 502, 503, 504),
+        allowed_methods=frozenset({"GET"}),
+        raise_on_status=False,
+    )
+    session = requests.Session()
+    session.auth = auth
+    adapter = HTTPAdapter(max_retries=retry)
+    session.mount("http://", adapter)
+    session.mount("https://", adapter)
+    return session
+
+
 def harvest_cadastre_wfs(limit=None):
-    """Query the cadastre WFS for features. ``limit`` is optional integer of the
-    maximum number of features to query.
+    """Query the cadastre WFS for features.
+
+    ``limit`` is the optional maximum number of features to query. Returns a
+    dictionary of created/updated/skipped/suspect counts.
     """
-    GEOSERVER_URL = os.environ["GEOSERVER_URL"]
+    if limit is not None:
+        limit = int(limit)
+        if limit < 0:
+            raise ValueError("limit must be zero or greater")
+        if limit == 0:
+            LOGGER.info("Limit is 0; nothing to harvest")
+            return {"created": 0, "updated": 0, "skipped": 0, "suspect": 0}
+
+    geoserver_url = os.environ["GEOSERVER_URL"]
+    auth = (os.environ["GEOSERVER_USER"], os.environ["GEOSERVER_PASSWORD"])
     params = {
         "service": "WFS",
         "version": "1.1.0",
         "request": "GetFeature",
         "typeName": os.environ["CADASTRE_LAYER"],
         "outputFormat": "application/json",
+        "srsName": "EPSG:4326",
         "sortBy": "CAD_PIN",
         "maxFeatures": 1,
     }
-    auth = (os.environ["GEOSERVER_USER"], os.environ["GEOSERVER_PASSWORD"])
-    # Initially query cadastre for the total feature count (maxfeatures=1)
-    # Iterate over the total, 1000 features at a time.
-    r = requests.get(url=GEOSERVER_URL, auth=auth, params=params)
-    total_features = r.json()["totalFeatures"]
-    if limit and limit < total_features:  # Optional limit on total features imported.
-        total_features = limit
-    params["maxFeatures"] = 1000
-    if limit and limit < params["maxFeatures"]:
-        params["maxFeatures"] = limit
-    reserve_pattern = re.compile("(?P<reserve>[0-9]+)$")
+    summary = {"created": 0, "updated": 0, "skipped": 0, "suspect": 0}
 
-    for i in range(0, total_features, params["maxFeatures"]):
-        LOGGER.info(f"Querying features {i} to {i + params['maxFeatures']} of {total_features}")
-        # Query the server for features, using startIndex.
-        params["startIndex"] = i
-        r = requests.get(url=GEOSERVER_URL, auth=auth, params=params)
-        j = r.json()
-        create_features = []
-        updates = 0
-        suspect = 0
-        skipped = 0
-        for f in j["features"]:
-            #  Query for an existing feature (PIN == object_id)
-            if Address.objects.filter(object_id=f["properties"]["CAD_PIN"]).exists():
-                add = Address.objects.get(object_id=f["properties"]["CAD_PIN"])
-                add.data = {}
-                update = True  # Existing feature
+    with _wfs_session(auth) as session:
+        # Query once for the total feature count, then page through the results.
+        response = session.get(geoserver_url, params=params, timeout=WFS_TIMEOUT)
+        response.raise_for_status()
+        try:
+            total_features = int(orjson.loads(response.content).get("totalFeatures", -1))
+        except (TypeError, ValueError):
+            total_features = -1
+
+        if total_features < 0:
+            expected_total = limit
+        elif limit is not None and limit < total_features:
+            expected_total = limit
+        else:
+            expected_total = total_features
+
+        start_index = 0
+        while True:
+            if limit is not None:
+                remaining = limit - start_index
+                if remaining <= 0:
+                    break
+                params["maxFeatures"] = min(WFS_PAGE_SIZE, remaining)
             else:
-                add = Address(object_id=f["properties"]["CAD_PIN"])
-                update = False  # New feature
-            poly = GEOSGeometry(orjson.dumps(f["geometry"]))
-            # Edge case: sometimes features are returned as MultiPolygon.
-            # If the feature is a MP containing one polygon feature, use that.
-            # Otherwise, skip the feature entirely.
-            if isinstance(poly, MultiPolygon) and len(poly) == 1:
-                poly = poly[0]
-            elif isinstance(poly, MultiPolygon) and len(poly) > 1:
-                LOGGER.info(
-                    f"Skipping feature with CAD_PIN {f['properties']['CAD_PIN']} (multipolygon with >1 feature)"
-                )
-                skipped += 1
-                continue
-            add.centroid = poly.centroid  # Precalculate the centroid.
-            # Edge case: we've had some "zero area" geometries.
-            if isinstance(poly.envelope, Point):
-                LOGGER.info(
-                    f"Feature with CAD_PIN {f['properties']['CAD_PIN']} has area of 0 (geometry: {f['geometry']})"
-                )
-                add.envelope = None
-                suspect += 1
-            else:
-                add.envelope = poly.envelope  # Simplify the geometry bounds.
-            add.boundary = poly
-            prop = f["properties"]
-            address_nice = ""  # Human-readable "nice" address.
-            if prop.get("CAD_LOT_NUMBER"):
-                add.data["lot_number"] = prop["CAD_LOT_NUMBER"]
-                address_nice += "(Lot {}) ".format(prop["CAD_LOT_NUMBER"])
-            if prop.get("CAD_HOUSE_NUMBER"):
-                add.data["house_number"] = prop["CAD_HOUSE_NUMBER"]
-                address_nice += "{} ".format(prop["CAD_HOUSE_NUMBER"])
-            if prop.get("CAD_ROAD_NAME"):
-                add.data["road_name"] = prop["CAD_ROAD_NAME"]
-                address_nice += "{} ".format(prop["CAD_ROAD_NAME"])
-                if prop.get("CAD_ROAD_TYPE"):
-                    add.data["road_type"] = prop["CAD_ROAD_TYPE"]
-                    # Try to match an existing suffix.
-                    if prop["CAD_ROAD_TYPE"] in ROADS_ABBREV:
-                        address_nice += "{} ".format(ROADS_ABBREV[prop["CAD_ROAD_TYPE"]])
-                    else:
-                        address_nice += "{} ".format(prop["CAD_ROAD_TYPE"])
-            if prop.get("CAD_LOCALITY"):
-                add.data["locality"] = prop["CAD_LOCALITY"]
-                address_nice += "{} ".format(prop["CAD_LOCALITY"])
-            if prop.get("CAD_POSTCODE"):
-                add.data["postcode"] = prop["CAD_POSTCODE"]
-                address_nice += "{} ".format(prop["CAD_POSTCODE"])
-            if prop.get("CAD_OWNER_NAME"):
-                add.owner = prop["CAD_OWNER_NAME"]
-            if prop.get("CAD_PIN"):
-                add.data["pin"] = prop["CAD_PIN"]
+                params["maxFeatures"] = WFS_PAGE_SIZE
+            params["startIndex"] = start_index
 
-            # Reserves
-            if prop.get("CAD_PITYPE_3_1"):
-                m = re.search(reserve_pattern, prop["CAD_PITYPE_3_1"])
-                if m:
-                    reserve_id = m.group()
-                    add.data["reserve"] = reserve_id
-                    address_nice = f"RESERVE {reserve_id} " + address_nice
+            log_end = start_index + params["maxFeatures"]
+            if expected_total is not None:
+                log_end = min(log_end, expected_total)
+            LOGGER.info(
+                "Querying features %s to %s of %s",
+                start_index,
+                log_end,
+                expected_total if expected_total is not None else "unknown",
+            )
 
-            add.address_nice = address_nice.strip()
-            add.address_text = add.get_address_text()
-            if update:  # Save changes to existing features.
-                add.save()
-                updates += 1
-            else:
-                create_features.append(add)
+            response = session.get(geoserver_url, params=params, timeout=WFS_TIMEOUT)
+            response.raise_for_status()
+            features = orjson.loads(response.content).get("features") or []
+            if not features:
+                break
 
-        # Do a bulk_create for each iteration (new features only).
-        Address.objects.bulk_create(create_features)
-        LOGGER.info(
-            f"Created {len(create_features)} addresses, updated {updates}, skipped {skipped}, suspect {suspect}"
-        )
+            if limit is not None:
+                # Never process more than the requested number of features.
+                features = features[: limit - start_index]
+
+            page_skipped = 0
+            page_suspect = 0
+            page_features = []
+            for feature in features:
+                prop = feature.get("properties") or {}
+                pin = prop.get("CAD_PIN")
+                if pin is None or pin == "":
+                    LOGGER.warning("Skipping feature without CAD_PIN")
+                    page_skipped += 1
+                    continue
+                page_features.append((str(pin), prop, feature.get("geometry")))
+
+            # Fetch all existing rows for this page in one query. in_bulk()
+            # defaults to the primary key, but PINs are stored in object_id.
+            existing = Address.objects.in_bulk(
+                [pin for pin, _, _ in page_features],
+                field_name="object_id",
+            )
+            processed = {}
+
+            for pin, prop, geometry in page_features:
+                if not geometry:
+                    LOGGER.warning("Skipping feature with CAD_PIN %s (no geometry)", pin)
+                    page_skipped += 1
+                    continue
+
+                try:
+                    poly = GEOSGeometry(orjson.dumps(geometry))
+                except (GEOSException, TypeError, ValueError) as exc:
+                    LOGGER.warning("Skipping feature with CAD_PIN %s (invalid geometry: %s)", pin, exc)
+                    page_skipped += 1
+                    continue
+
+                # Sometimes features are returned as MultiPolygon. If it contains
+                # exactly one polygon, use that; otherwise skip the feature.
+                if isinstance(poly, MultiPolygon):
+                    if len(poly) != 1:
+                        LOGGER.info(
+                            "Skipping feature with CAD_PIN %s (multipolygon with %s polygons)",
+                            pin,
+                            len(poly),
+                        )
+                        page_skipped += 1
+                        continue
+                    poly = poly[0]
+
+                if not isinstance(poly, Polygon) or poly.empty:
+                    LOGGER.info(
+                        "Skipping feature with CAD_PIN %s (unsupported or empty geometry: %s)",
+                        pin,
+                        poly.geom_type,
+                    )
+                    page_skipped += 1
+                    continue
+
+                try:
+                    centroid = poly.centroid
+                    envelope = poly.envelope
+                    area = poly.area
+                except GEOSException as exc:
+                    LOGGER.warning("Skipping feature with CAD_PIN %s (invalid geometry: %s)", pin, exc)
+                    page_skipped += 1
+                    continue
+
+                if centroid is None:
+                    LOGGER.info("Skipping feature with CAD_PIN %s (no centroid)", pin)
+                    page_skipped += 1
+                    continue
+
+                # Re-use the object if this PIN already appeared on this page.
+                address = processed.get(pin) or existing.get(pin)
+                if address is None:
+                    address = Address(object_id=pin)
+                processed[pin] = address
+                address.data = {}
+
+                address.centroid = centroid
+                if area == 0:
+                    # A zero-area geometry can have a line-like envelope, which
+                    # cannot be stored in the PolygonField.
+                    LOGGER.info("Feature with CAD_PIN %s has zero area", pin)
+                    address.envelope = None
+                    address.boundary = None
+                    page_suspect += 1
+                else:
+                    address.envelope = envelope if isinstance(envelope, Polygon) else None
+                    address.boundary = poly
+
+                address_nice = ""  # Human-readable "nice" address.
+                if prop.get("CAD_LOT_NUMBER"):
+                    address.data["lot_number"] = prop["CAD_LOT_NUMBER"]
+                    address_nice += "(Lot {}) ".format(prop["CAD_LOT_NUMBER"])
+                if prop.get("CAD_HOUSE_NUMBER"):
+                    address.data["house_number"] = prop["CAD_HOUSE_NUMBER"]
+                    address_nice += "{} ".format(prop["CAD_HOUSE_NUMBER"])
+                if prop.get("CAD_ROAD_NAME"):
+                    address.data["road_name"] = prop["CAD_ROAD_NAME"]
+                    address_nice += "{} ".format(prop["CAD_ROAD_NAME"])
+                    if prop.get("CAD_ROAD_TYPE"):
+                        address.data["road_type"] = prop["CAD_ROAD_TYPE"]
+                        # Try to match an existing suffix.
+                        if prop["CAD_ROAD_TYPE"] in ROADS_ABBREV:
+                            address_nice += "{} ".format(ROADS_ABBREV[prop["CAD_ROAD_TYPE"]])
+                        else:
+                            address_nice += "{} ".format(prop["CAD_ROAD_TYPE"])
+                if prop.get("CAD_LOCALITY"):
+                    address.data["locality"] = prop["CAD_LOCALITY"]
+                    address_nice += "{} ".format(prop["CAD_LOCALITY"])
+                if prop.get("CAD_POSTCODE"):
+                    address.data["postcode"] = prop["CAD_POSTCODE"]
+                    address_nice += "{} ".format(prop["CAD_POSTCODE"])
+
+                owner = prop.get("CAD_OWNER_NAME")
+                address.owner = owner.strip() if isinstance(owner, str) else owner
+                address.data["pin"] = pin
+
+                # Reserves: match the SCDB importer by requiring an "R" prefix.
+                pitype = prop.get("CAD_PITYPE_3_1")
+                if isinstance(pitype, str) and pitype.startswith("R"):
+                    match = RESERVE_PATTERN.search(pitype)
+                    if match:
+                        reserve_id = match.group("reserve")
+                        address.data["reserve"] = reserve_id
+                        address_nice = f"RESERVE {reserve_id} " + address_nice
+
+                address.address_nice = address_nice.strip()
+                address.address_text = address.get_address_text()
+
+            to_create = [address for pin, address in processed.items() if pin not in existing]
+            to_update = [address for pin, address in processed.items() if pin in existing]
+            with transaction.atomic():
+                if to_create:
+                    # Upsert so a concurrent harvest can't trip the unique
+                    # constraint between the in_bulk() lookup and this insert.
+                    Address.objects.bulk_create(
+                        to_create,
+                        update_conflicts=True,
+                        unique_fields=["object_id"],
+                        update_fields=ADDRESS_UPDATE_FIELDS,
+                    )
+                if to_update:
+                    Address.objects.bulk_update(to_update, ADDRESS_UPDATE_FIELDS)
+
+            summary["created"] += len(to_create)
+            summary["updated"] += len(to_update)
+            summary["skipped"] += page_skipped
+            summary["suspect"] += page_suspect
+
+            start_index += len(features)
+            LOGGER.info(
+                "Processed %s features: created %s, updated %s, skipped %s, suspect %s",
+                len(features),
+                len(to_create),
+                len(to_update),
+                page_skipped,
+                page_suspect,
+            )
+
+            if limit is not None and start_index >= limit:
+                break
+            if total_features >= 0 and start_index >= total_features:
+                break
+
+    LOGGER.info(
+        "Harvest complete: created %s, updated %s, skipped %s, suspect %s",
+        summary["created"],
+        summary["updated"],
+        summary["skipped"],
+        summary["suspect"],
+    )
+    return summary
 
 
 # Schema: https://kaartdijin-boodja.dbca.wa.gov.au/catalogue/entries/54/attribute/
