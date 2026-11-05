@@ -13,14 +13,18 @@ dependencies = [
   "django-extensions==4.1",
   "requests==2.34.2",
   "gunicorn[fast]==26.2.0",
-  "fudgeo==1.5.10",
-  "azure-storage-blob==12.31.0",
   "orjson==3.13.0",
   "whitenoise[brotli]==6.12.0",
 ]
 
 [dependency-groups]
-dev = ["ipython>=9.18.1", "ipdb>=0.13.13", "mixer>=7.2.2", "pre-commit>=4.6.2"]
+dev = [
+    "ipython>=9.18.1",
+    "ipdb>=0.13.13",
+    "mixer>=7.2.2",
+    "pre-commit>=4.6.2",
+    "deptry>=0.25.1",
+]
 
 # Reference: https://docs.astral.sh/ruff/configuration/
 [tool.ruff]

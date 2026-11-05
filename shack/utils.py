@@ -1,16 +1,12 @@
 import logging
 import os
 import re
-from tempfile import NamedTemporaryFile
 
 import orjson
 import requests
-from azure.storage.blob import BlobClient
-from django.conf import settings
-from django.contrib.gis.geos import GEOSException, GEOSGeometry, MultiPolygon, Point, Polygon
+from django.contrib.gis.geos import GEOSException, GEOSGeometry, MultiPolygon, Polygon
 from django.db import transaction
 from django.db.migrations.operations.base import Operation
-from fudgeo.geopkg import GeoPackage
 from requests.adapters import HTTPAdapter
 from urllib3.util.retry import Retry
 
@@ -166,9 +162,7 @@ def harvest_cadastre_wfs(limit=None):
             LOGGER.info("Harvest complete: no features to process")
             return summary
 
-        if total_features < 0:
-            expected_total = limit
-        elif limit is not None and limit < total_features:
+        if total_features < 0 or limit is not None and limit < total_features:
             expected_total = limit
         else:
             expected_total = total_features
@@ -432,126 +426,6 @@ CPT_CADASTRE_SCDB_SCHEMA = (
     "length",
     "area",
 )
-
-
-def import_cpt_cadastre_scdb(blob_name=None):
-    """Function to import CPT_CADASTRE_SCDB.gpkg from blob store."""
-    if not blob_name:
-        return
-
-    # Download the Cadastre blob locally to a temporary file.
-    blob = BlobClient(
-        account_url=f"https://{settings.AZURE_ACCOUNT_NAME}.blob.core.windows.net",
-        credential=settings.AZURE_ACCOUNT_KEY,
-        container_name=settings.AZURE_CONTAINER,
-        blob_name=blob_name,
-    )
-    LOGGER.info(f"Downloading {blob_name} from blob store")
-    blob_local = NamedTemporaryFile()
-    data = blob.download_blob()
-    data.readinto(blob_local)
-    blob_local.flush()
-    LOGGER.info("Download complete")
-
-    gpkg = GeoPackage(blob_local.name)
-    # gpkg.connection opens a sqlite3 connection to the GPKG database.
-    cursor = gpkg.connection.execute("SELECT COUNT(*) FROM CPT_CADASTRE_SCDB")
-    count = cursor.fetchone()
-    LOGGER.info(f"Importing {count[0]} cadastre records")
-
-    count = 0
-    created = 0
-    updates = 0
-    suspect = 0
-    skipped = 0
-    reserve_pattern = re.compile("(?P<reserve>[0-9]+)$")
-
-    # Iterate over the database records.
-    for row in gpkg.connection.execute("SELECT * FROM CPT_CADASTRE_SCDB"):
-        count += 1
-        record = dict(zip(CPT_CADASTRE_SCDB_SCHEMA, row))
-
-        #  Query for an existing feature (PIN == object_id)
-        if Address.objects.filter(object_id=record["pin"]).exists():
-            address = Address.objects.get(object_id=record["pin"])
-            address.data = {}
-            update = True  # Existing feature
-        else:
-            address = Address(object_id=record["pin"])
-            update = False  # New feature
-
-        # Sometimes geometry contains >1 Polygon.
-        # If >1 or 0, skip the feature.
-        geom = record["geom"]
-        if len(geom.polygons) > 1:
-            LOGGER.info(f"Skipping feature with PIN {record['pin']} (multipolygon with >1 feature)")
-            continue
-
-        # Convert the fudgeo geometry to GEOSGeometry.
-        poly = geom.polygons[0]
-        shape = GEOSGeometry(memoryview(poly._to_wkb(bytearray())))
-
-        address.centroid = shape.centroid
-        address.envelope = shape.envelope
-        address.boundary = shape
-
-        # Edge case: we sometimes have "zero area" geometries.
-        if isinstance(shape.envelope, Point):
-            LOGGER.info(f"Feature with PIN {record['pin']} has zero area")
-            address.envelope = None
-            address.boundary = None
-            suspect += 1
-
-        address_nice = ""  # Human-readable "nice" address.
-
-        if record["lot_number"]:
-            address.data["lot_number"] = record["lot_number"]
-            address_nice += f"(Lot {record['lot_number']}) "
-        if record["house_number"]:
-            address.data["house_number"] = record["house_number"]
-            address_nice += f"{record['house_number']} "
-        if record["road_name"]:
-            address.data["road_name"] = record["road_name"]
-            address_nice += f"{record['road_name']} "
-            if record["road_type"]:
-                address.data["road_type"] = record["road_type"]
-                # Try to match an existing suffix.
-                if record["road_type"] in ROADS_ABBREV:
-                    address_nice += f"{ROADS_ABBREV[record['road_type']]} "
-                else:
-                    address_nice += f"{record['road_type']} "
-        if record["locality"]:
-            address.data["locality"] = record["locality"]
-            address_nice += f"{record['locality']} "
-        if record["postcode"]:
-            address.data["postcode"] = record["postcode"]
-            address_nice += f"{record['postcode']} "
-        if record["owner_name"]:
-            address.owner = record["owner_name"].strip()
-        if record["pin"]:
-            address.pin = record["pin"]
-
-        # Reserves
-        if record["pitype_3_1"] and record["pitype_3_1"].startswith("R"):
-            match = re.search(reserve_pattern, record["pitype_3_1"])
-            if match:
-                address.data["reserve"] = match.group()
-                address_nice = f"RESERVE {match.group()} " + address_nice
-
-        address.address_nice = address_nice.strip()
-        address.address_text = address.get_address_text()
-        address.save()
-
-        if update:
-            updates += 1
-        else:
-            created += 1
-
-        # Running total:
-        if count % 1000 == 0:
-            LOGGER.info(f"Processed {count} addresses")
-
-    LOGGER.info(f"Created {created} addresses, updated {updates}, skipped {skipped}, suspect {suspect}")
 
 
 # Source: http://www.ipaustralia.gov.au/about-us/doing-business-with-us/address-standards/

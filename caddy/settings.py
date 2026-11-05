@@ -32,11 +32,6 @@ ROOT_URLCONF = "caddy.urls"
 WSGI_APPLICATION = "caddy.wsgi.application"
 DEFAULT_AUTO_FIELD = "django.db.models.AutoField"
 
-# Azure blob storage credentials.
-AZURE_ACCOUNT_NAME = env("AZURE_ACCOUNT_NAME", "account_name")
-AZURE_ACCOUNT_KEY = env("AZURE_ACCOUNT_KEY", "account_key")
-AZURE_CONTAINER = env("AZURE_CONTAINER", "container")
-
 INSTALLED_APPS = (
     "whitenoise.runserver_nostatic",
     "django.contrib.admin",
