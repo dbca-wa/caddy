@@ -12,7 +12,7 @@ dependencies = [
   "dj-database-url==3.1.2",
   "django-extensions==4.1",
   "requests==2.34.2",
-  "gunicorn[fast]==26.2.0",
+  "gunicorn[fast]==27.0.1",
   "orjson==3.13.0",
   "whitenoise[brotli]==6.12.0",
 ]
